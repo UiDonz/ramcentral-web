@@ -1,0 +1,218 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap');
+:root {
+ --forest: #1c3d2e;
+ --forest-light: #2f5941;
+ --gold: #c99a3c;
+ --cream: #f7f4ec;
+ --ink: #1e1e1c;
+ --muted: #6b6a63;
+ --border: #ddd8c9;
+ --danger: #a5372c;
+ --white: #ffffff;
+}
+* { box-sizing: border-box; }
+body {
+ margin: 0;
+ font-family: 'Work Sans', sans-serif;
+ background: var(--cream);
+ color: var(--ink);
+}
+h1, h2, h3 {
+ font-family: 'Fraunces', serif;
+ font-weight: 600;
+ margin: 0 0 0.4em;
+}
+h1 { font-size: 2rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; }
+h3 { font-size: 1.05rem; }
+p { line-height: 1.6; color: var(--ink); }
+a { color: var(--forest); }
+button {
+ font-family: 'Work Sans', sans-serif;
+ font-weight: 500;
+ background: var(--forest);
+ color: var(--white);
+ border: none;
+ border-radius: 6px;
+ padding: 0.6em 1.2em;
+ cursor: pointer;
+ font-size: 0.95rem;
+}
+button:hover { background: var(--forest-light); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+button.secondary {
+ background: transparent;
+ color: var(--forest);
+ border: 1px solid var(--forest);
+}
+button.secondary:hover { background: rgba(28, 61, 46, 0.06); }
+button.link-button {
+ background: none;
+ color: var(--forest);
+ padding: 0;
+ text-decoration: underline;
+ font-size: 0.9rem;
+}
+button.link-button:hover { background: none; color: var(--forest-light); }
+input, textarea, select {
+ font-family: 'Work Sans', sans-serif;
+ font-size: 0.95rem;
+ padding: 0.55em 0.7em;
+ border: 1px solid var(--border);
+ border-radius: 6px;
+ background: var(--white);
+ width: 100%;
+}
+label {
+ display: flex;
+ flex-direction: column;
+ gap: 0.3em;
+ font-size: 0.88rem;
+ color: var(--muted);
+ margin-bottom: 0.9em;
+}
+label.checkbox-label {
+ flex-direction: row;
+ align-items: center;
+ gap: 0.5em;
+}
+label.checkbox-label input { width: auto; }
+/* Navbar */
+.navbar {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 1em 2em;
+ background: var(--forest);
+ color: var(--white);
+}
+.navbar-brand {
+ font-family: 'Fraunces', serif;
+ font-weight: 600;
+ font-size: 1.3rem;
+ color: var(--white);
+ text-decoration: none;
+}
+.navbar-links {
+ display: flex;
+ align-items: center;
+ gap: 1.5em;
+}
+.navbar-links a {color: var(--white);
+ text-decoration: none;
+ font-size: 0.92rem;
+}
+.navbar-links a:hover { color: var(--gold); }
+.navbar-links button.link-button {
+ color: var(--white);
+ opacity: 0.85;
+}
+/* Layout */
+.page {
+ max-width: 960px;
+ margin: 0 auto;
+ padding: 2.5em 2em 5em;
+}
+.page.narrow { max-width: 620px; }
+.page-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: flex-start;
+ gap: 1.5em;
+ flex-wrap: wrap;
+}
+.page-subtitle { color: var(--muted); max-width: 60ch; }
+.search-input { max-width: 320px; }
+/* Auth */
+.auth-page {
+ display: flex;
+ justify-content: center;
+ padding: 4em 1.5em;
+}
+.auth-form {
+ background: var(--white);
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ padding: 2.2em;
+ width: 100%;
+ max-width: 400px;
+}
+.auth-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: -0.6em; }
+.auth-switch { font-size: 0.88rem; color: var(--muted); text-align: center; margin-top: 1em; }
+.form-error {
+ background: rgba(165, 55, 44, 0.08);
+ color: var(--danger);
+ padding: 0.6em 0.9em;
+ border-radius: 6px;
+ font-size: 0.88rem;
+}
+/* Club grid + cards */
+.club-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+ gap: 1em;
+ margin-top: 0.8em;
+}
+.club-card {
+ display: block;
+ background: var(--white);
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ padding: 1.2em;
+ text-decoration: none;
+ color: var(--ink);
+ transition: border-color 0.15s;
+}
+.club-card:hover { border-color: var(--forest); }
+.club-card-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: baseline;
+ gap: 0.5em;
+}
+.club-card-count { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+.club-card-category { color: var(--gold); font-size: 0.82rem; font-weight: 500; margin: 0.2em 0
+ 0.5em; }
+.club-card-desc { font-size: 0.9rem; color: var(--muted); margin: 0; }
+.badge {
+ display: inline-block;
+ background: rgba(201, 154, 60, 0.15);
+ color: #8a6a24;
+ font-size: 0.75rem;
+ padding: 0.2em 0.6em;
+ border-radius: 20px;
+ margin-top: 0.6em;
+}
+.empty-state { color: var(--muted); font-style: italic; }
+/* Club detail */
+.detail-section {
+ border-top: 1px solid var(--border);
+ padding-top: 1.2em;
+ margin-top: 1.2em;
+}
+.inline-form {
+ background: var(--white);
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ padding: 1.2em;
+ margin-bottom: 1.2em;
+}
+.form-actions { display: flex; gap: 0.6em; }
+.announcement, .event-card {
+ background: var(--white);
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ padding: 1em 1.2em;
+ margin-bottom: 0.8em;
+ display: block;
+ text-decoration: none;
+ color: var(--ink);
+}
+.member-row {
+ display: flex;
+ align-items: center;
+ gap: 1em;
+ padding: 0.5em 0;
+ border-bottom: 1px solid var(--border);
+}
+.member-row:last-child { border-bottom: none; }
