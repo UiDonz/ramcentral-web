@@ -23,4 +23,25 @@ export default function Login() {
             setSubmitting(false);
         }
     }
-    
+    return (
+        <div className="auth-page">
+            <form className="auth-form" onSubmit={handleSubmit}>
+                <h1>Log in</h1>
+                <p className="auth-subtitle">Sign in with your Farmingdale email.</p>
+                {error && <p className="form-error">{error}</p>}
+                <label>
+                Email
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </label>
+            <label>
+                Password
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </label>
+            <button type="submit" disabled={submitting}>{submitting ? 'Logging in...' : 'Login'}</button>
+            <p className="auth-switch">
+                New here? <Link to="/signup">Create an account</Link>
+            </p>
+        </form>
+    </div>
+    );   
+}
