@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+ function isSignedIn() {
+ return request.auth != null;
+ }
+ function isSelf(uid) {
+ return isSignedIn() && request.auth.uid == uid;
+ }
+ // --- users/{uid} ---
+ match /users/{uid} {
+ allow read: if isSignedIn();
+ allow create: if isSelf(uid);
+ allow update: if isSelf(uid);
+ allow delete: if false;
+ }
+ // --- clubs/{clubId} ---
+ match /clubs/{clubId} {
+ allow read: if isSignedIn();
+ allow create: if isSignedIn();
+ // Deliberately permissive for now - any signed-in user can update a
+ // club doc. Tightened to officers-only in Issue #19 once the
+ // members subcollection and role model exist.
+ allow update: if isSignedIn();
+ allow delete: if false;
+ }
+ }
+}
