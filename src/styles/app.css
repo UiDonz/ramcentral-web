@@ -216,3 +216,16 @@ label.checkbox-label input { width: auto; }
  border-bottom: 1px solid var(--border);
 }
 .member-row:last-child { border-bottom: none; }
+/* Accessibility: visible focus outlines for keyboard navigation */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+outline: 2px solid var(--gold);
+outline-offset: 2px;
+}
+.club-card:focus-visible {
+outline: 2px solid var(--forest);
+outline-offset: 3px;
+}
