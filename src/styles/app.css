@@ -229,3 +229,260 @@ outline-offset: 2px;
 outline: 2px solid var(--forest);
 outline-offset: 3px;
 }
+
+
+/* --- Sprint 3 additions to src/styles/app.css (appended below the
+existing Sprint 1/2 rules - .club-card, .auth-form, etc. are unchanged
+and are not repeated here). --- */
+/* Calendar: one dot per category present that day (academic/clubs/campus -
+colors set inline from Calendar.jsx to match the news feeds below), so a
+glance at the month view already hints at what kind of day it is before
+clicking. */
+.calendar-dot-row { display: flex; gap: 3px; height: 4px; align-items: center; }
+.calendar-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
+/* News page */
+.news-hero {
+position: relative;
+padding: 1.1em 1.2em 1.3em;
+border-radius: 22px;
+background: linear-gradient(135deg, rgba(28, 61, 46, 0.05), rgba(201, 154, 60, 0.08));
+border: 1px solid var(--border);
+overflow: hidden;
+}
+.news-hero::before {
+content: '';
+position: absolute;
+top: -70px;
+right: -70px;
+width: 240px;
+height: 240px;
+border-radius: 50%;
+background: radial-gradient(circle, rgba(201, 154, 60, 0.22), transparent 70%);
+pointer-events: none;
+}
+.news-hero > * { position: relative; }
+.news-top-row { display: flex; gap: 1em; align-items: flex-start; }
+.news-calendar-col { flex: 1.5; min-width: 0; }
+.news-today-col { flex: 1; min-width: 0; }
+.news-bottom-row { display: flex; gap: 1em; margin-top: 1.2em; }
+.news-bottom-row > div { flex: 1; min-width: 0; }
+.section-label {
+font-size: 0.7rem;
+font-weight: 600;
+color: var(--muted);
+letter-spacing: 0.04em;
+text-transform: uppercase;
+margin-bottom: 0.5em;
+}
+.overview-label {
+display: block;
+font-size: 0.68rem;
+font-weight: 600;
+color: #8a6a24;
+letter-spacing: 0.02em;
+text-transform: uppercase;
+margin-bottom: 0.3em;
+}
+.day-panel {
+border: 1px solid var(--border);
+border-radius: 14px;
+padding: 0.75em 0.85em;
+margin-top: 0.8em;
+font-size: 0.85rem;
+color: var(--ink);
+}
+/* Today overview card - given noticeably more room (was a cramped 220px)
+and scrolls internally past that (same themed thin scrollbar as the feed
+tickers) instead of growing the page when there's a lot going on. Each
+thing happening today is its own bordered card (.today-bullet), same
+idea as a feed-item, instead of a dense run-on paragraph or tight
+hairline-separated rows. */
+.today-card {
+border: 1px solid var(--gold);
+border-radius: 14px;
+height: 320px;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+padding: 0.9em 1em;
+}
+.today-feed {
+flex: 1;
+min-height: 0;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 0.6em;
+padding: 0.3em 0.3em 0.1em 0.05em;
+scrollbar-width: thin;
+scrollbar-color: var(--gold) transparent;
+}
+.today-feed::-webkit-scrollbar { width: 6px; }
+.today-feed::-webkit-scrollbar-track { background: transparent; }
+.today-feed::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+.today-empty {
+font-family: 'Fraunces', serif;
+font-style: italic;
+font-size: 0.85rem;
+color: var(--muted);
+}
+.today-bullet {
+display: flex;
+gap: 0.6em;
+align-items: flex-start;
+padding: 0.8em 0.9em;
+border: 1px solid var(--border);
+border-radius: 12px;
+background: rgba(201, 154, 60, 0.05);
+flex-shrink: 0;
+}
+.today-bullet-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex-shrink:
+0; margin-top: 6px; }
+.today-bullet-text { font-size: 0.85rem; color: var(--ink); line-height: 1.5; }
+.day-panel-date { font-family: 'Work Sans', sans-serif; font-style: normal; font-weight: 500; color:
+var(--forest); margin-bottom: 0.4em; }
+.day-panel-empty { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+.day-bullet { display: flex; gap: 0.6em; margin-bottom: 0.7em; }
+.day-bullet:last-child { margin-bottom: 0; }
+.day-bullet-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+.day-bullet-text { font-size: 0.85rem; color: var(--ink); line-height: 1.4; font-style: normal; }
+.day-bullet-link { font-size: 0.75rem; color: var(--gold); font-weight: 500; }
+.feed-box {
+border: 1px solid var(--border);
+border-radius: 14px;
+overflow: hidden;
+position: relative;
+}
+.feed-box-large { height: 220px; }
+.feed-box-small { height: 160px; }
+/* Thin gold accent bar across the top of each feed box - a small "banner"
+touch so these boxes don't read as plain bordered rectangles. */
+.feed-box::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+height: 3px;
+background: linear-gradient(90deg, var(--gold), transparent 75%);
+z-index: 1;
+}
+/* Academic/clubs/campus auto-scroll feeds (AutoScrollFeed in News.jsx). */
+.feed-ticker {
+height: 100%;
+overflow-y: auto;
+scrollbar-width: thin;
+scrollbar-color: var(--gold) transparent;
+}
+.feed-ticker::-webkit-scrollbar { width: 6px; }
+.feed-ticker::-webkit-scrollbar-track { background: transparent; }
+.feed-ticker::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+.feed-ticker-set { display: flex; flex-direction: column; }
+.feed-item { border-bottom: 1px solid var(--border); }
+.feed-item:last-child { border-bottom: none; }
+/* Real, officer-created club events (vs. the scraper's keyword-guessed
+items) get a tinted background so it's clear why they're at the top of
+the list and not from the same source as everything below them. */
+.feed-item-club { background: rgba(114, 36, 62, 0.05); }
+/* One small colored tag per category, on every card that shows one
+(feed items, Today's overview bullets) - same three colors as the
+calendar dots and day-click bullets, so the color always means the same
+thing everywhere on this page. */
+.feed-item-tag {
+display: inline-block;
+font-size: 0.62rem;
+font-weight: 600;
+letter-spacing: 0.03em;
+text-transform: uppercase;
+border-radius: 4px;
+padding: 0.1em 0.4em;
+margin-right: 0.4em;
+vertical-align: middle;
+}
+.feed-item-tag.tag-academic { color: #0c447c; background: rgba(12, 68, 124, 0.1); }
+.feed-item-tag.tag-clubs { color: #72243e; background: rgba(114, 36, 62, 0.1); }
+.feed-item-tag.tag-campus { color: #27500a; background: rgba(39, 80, 10, 0.1); }
+.feed-item-toggle {
+width: 100%;
+background: none;
+border: none;
+text-align: left;
+padding: 0.7em 0.8em;
+display: flex;
+justify-content: space-between;
+align-items: baseline;
+gap: 0.6em;
+cursor: pointer;
+}
+.feed-item-title { font-size: 0.85rem; font-weight: 500; color: var(--ink); }
+.feed-item-date { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+.feed-item-link { font-size: 0.78rem; color: var(--gold); font-weight: 500; }
+/* Any card driven by ZoomCard (news items, club cards, event cards) is a
+plain div with role="button" rather than a real <a>/<button>, so the
+pointer cursor needs to be opted back in explicitly. */
+[role="button"] { cursor: pointer; }
+/* ZoomCard (Medium-style shared-element zoom). The portal panel starts
+pinned to the clicked card's exact on-screen position (inline style, set
+from JS) and animates to/from the centered ".open" layout below - see
+ZoomCard.jsx for how the two states get bridged. */
+.zoom-overlay {
+position: fixed;
+inset: 0;
+background: rgba(28, 61, 46, 0.42);
+backdrop-filter: blur(3px);
+z-index: 300;
+opacity: 0;
+transition: opacity 0.28s ease;
+}
+.zoom-overlay.open { opacity: 1; }
+.zoom-panel {
+position: fixed;
+background: var(--white);
+border: 1px solid var(--gold);
+border-radius: 14px;
+box-shadow: 0 28px 70px rgba(0, 0, 0, 0.3);
+overflow: auto;
+padding: 1.5em 1.7em;
+z-index: 301;
+transition:
+top 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+left 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+height 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+border-radius 0.32s ease;
+}
+.zoom-panel.open {
+top: 50%;
+left: 50%;
+width: min(640px, 92vw);
+height: auto;
+max-height: 80vh;
+transform: translate(-50%, -50%);
+border-radius: 18px;
+}
+.zoom-close {
+position: absolute;
+top: 0.6em;
+right: 0.6em;
+background: rgba(28, 61, 46, 0.08);
+color: var(--forest);
+border: none;
+border-radius: 50%;
+width: 30px;
+height: 30px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.2rem;
+line-height: 1;
+padding: 0;
+}
+.zoom-close:hover { background: rgba(28, 61, 46, 0.16); }
+.zoom-panel-title { font-family: 'Fraunces', serif; font-weight: 600; margin: 0 0 0.3em;
+padding-right: 2em; }
+.zoom-panel-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.9em; }
+.zoom-panel-body { font-size: 0.95rem; line-height: 1.6; color: var(--ink); }
+.zoom-panel-actions { margin-top: 1.3em; display: flex; gap: 0.6em; align-items: center; }
+/* Body-scroll lock while a ZoomCard is open (toggled from ZoomCard.jsx). */
+body.zoom-locked { overflow: hidden; }
