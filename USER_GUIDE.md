@@ -23,3 +23,32 @@ Everything students can do, plus, from inside your club's page:
   Officer status is per-club: you can be a regular member of one club and an officer of another.
 ## Starting a new club
 Click "Start a club" in the navigation. You become that club's first officer automatically.
+## News & Campus Calendar (added in Sprint 3)
+The News tab (`/news`) is a live campus information hub, built on top of a scheduled scraper
+rather than the club/event data teammates enter by hand.
+**Where the data comes from**
+- `scripts/scrape-news.js` runs on a schedule via GitHub Actions
+(`.github/workflows/scrape-news.yml`),
+never in the browser. It holds the only admin-level Firebase credentials and the Anthropic API key
+in this project, both injected from GitHub Actions secrets at run time.
+- It pulls two things: Farmingdale's News Room headlines, and every event on the school's real public
+calendar feed (the same one behind farmingdale.edu/calendar/) - academic deadlines, RamCentral/
+CampusLabs club events, general campus events, and athletics.
+- Each item is categorized as academic / clubs / campus by keyword match, summarized in a few
+original-words sentences by Claude, and written to Firestore (`schoolNews`, `academicCalendar`,
+and one `campusDigest` doc per day).
+**What the page shows**
+- A calendar with a small colored dot per category on any day that has events; clicking a day shows
+that day's full detail list.
+- Today's Overview: the day's digest broken into individual clickable cards.
+- Three auto-scrolling feeds - Academic news, Clubs & fairs (real officer-created events appear here
+first, tagged "CLUB EVENT", ahead of scraped items), and Campus news.
+- Clicking any card zooms it into a large, centered detail panel (the same ZoomCard component used
+everywhere a card expands); click anywhere on the open panel, the backdrop, the close button, or
+press Escape to dismiss it.
+**Known simplifications worth mentioning in your next report**
+- Today's digest is split into sentences and category-tagged with a keyword guess on the client,
+since the AI-written digest has no per-sentence category metadata attached - it is usually right,
+but not guaranteed.
+- The scraper's rolling calendar window (3 days back, 60 days out) means an event added to the
+school's calendar further out than 2 months won't appear until a later scheduled run picks it up.
