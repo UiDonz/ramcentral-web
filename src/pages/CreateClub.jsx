@@ -49,9 +49,7 @@ Thursdays 5pm, Room 201" />
 <input value={form.contactInfo} onChange={update('contactInfo')} />
 </label>
 <label className="checkbox-label">
-<input type="checkbox" checked={form.requiresApproval}
-onChange={update('requiresApproval')} />
-Require officer approval for new members
+<input type="checkbox" checked={form.requiresApproval} onChange={update('requiresApproval')} /> Require officer approval for new members
 </label>
 <button type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit for approval'}</button>
 </form>
