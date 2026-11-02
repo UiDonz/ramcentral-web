@@ -485,3 +485,140 @@ padding-right: 2em; }
 .zoom-panel-actions { margin-top: 1.3em; display: flex; gap: 0.6em; align-items: center; }
 /* Body-scroll lock while a ZoomCard is open (toggled from ZoomCard.jsx). */
 body.zoom-locked { overflow: hidden; }
+.sidebar-hover-zone {
+  display: none;
+}
+ 
+.sidebar {
+  width: 88px;
+  flex-shrink: 0;
+  background: var(--forest);
+  padding: 1.2em 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  border-radius: 0 22px 22px 0;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.22);
+  z-index: 46;
+}
+.app-main {
+  flex: 1;
+  min-width: 0;
+  margin-left: 88px;
+}
+ 
+/* === :root also gained three --blob-* variables, extracted from what were
+   three literal rgba() values inline in body's background-image, so an
+   accent theme below can recolor the background wash too: === */
+:root {
+  /* ...existing tokens (--forest, --gold, --cream, --ink, --muted,
+     --border, --danger, --white) unchanged... */
+  --blob-gold: rgba(201, 154, 60, 0.12);
+  --blob-forest-1: rgba(28, 61, 46, 0.10);
+  --blob-forest-2: rgba(28, 61, 46, 0.06);
+}
+/* body's background-image now reads var(--blob-gold) / var(--blob-forest-1)
+   / var(--blob-forest-2) instead of those same three values written out
+   literally - unchanged in light/forest (the app's default), but now
+   overridable per theme/accent below. */
+ 
+ 
+/* ---------------------------------------------------------------- */
+/* Settings: appearance (theme/accent/font size) + Home layout reorder.
+   Purely additive - nothing above this point was changed except
+   replacing three literal rgba() values in :root/body with the
+   equivalent --blob-* variables (see the comment on :root), so an
+   accent override below can recolor the background wash too. */
+ 
+/* --- Dark mode (html[data-theme="dark"], set by SettingsContext) --- */
+html[data-theme="dark"] {
+  --cream: #16181a;
+  --white: #1f2224;
+  --ink: #e9e7df;
+  --muted: #9b9a92;
+  --border: #33352f;
+  --blob-gold: rgba(201, 154, 60, 0.10);
+  --blob-forest-1: rgba(47, 89, 65, 0.22);
+  --blob-forest-2: rgba(47, 89, 65, 0.14);
+}
+ 
+/* --- Accent themes (html[data-accent="..."], set by SettingsContext).
+   "forest" is the existing default and needs no override - these three
+   just recolor the same --forest/--forest-light/--gold/--blob-* tokens
+   everything else in this file already reads from. --danger is left
+   alone on purpose (it's a status color, not a brand color). --white
+   stays the same too within a given theme (light/dark already covers
+   surface color; accent only changes the brand hue). */
+html[data-accent="ocean"] {
+  --forest: #0f3a52;
+  --forest-light: #1f6288;
+  --gold: #3fa9c9;
+  --blob-gold: rgba(63, 169, 201, 0.14);
+  --blob-forest-1: rgba(15, 58, 82, 0.12);
+  --blob-forest-2: rgba(15, 58, 82, 0.07);
+}
+html[data-accent="crimson"] {
+  --forest: #5c1f2b;
+  --forest-light: #7d2c3b;
+  --gold: #d98a3d;
+  --blob-gold: rgba(217, 138, 61, 0.13);
+  --blob-forest-1: rgba(92, 31, 43, 0.11);
+  --blob-forest-2: rgba(92, 31, 43, 0.06);
+}
+html[data-accent="violet"] {
+  --forest: #3a2c5c;
+  --forest-light: #55408a;
+  --gold: #c98cd6;
+  --blob-gold: rgba(201, 140, 214, 0.13);
+  --blob-forest-1: rgba(58, 44, 92, 0.11);
+  --blob-forest-2: rgba(58, 44, 92, 0.06);
+}
+/* Dark mode + a non-default accent both apply at once (two separate
+   attributes) - brighten the forest blob a bit more in that combination,
+   same reasoning as the plain dark-mode override above. */
+html[data-theme="dark"][data-accent="ocean"] { --blob-forest-1: rgba(31, 98, 136, 0.22); --blob-forest-2: rgba(31, 98, 136, 0.14); }
+html[data-theme="dark"][data-accent="crimson"] { --blob-forest-1: rgba(125, 44, 59, 0.22); --blob-forest-2: rgba(125, 44, 59, 0.14); }
+html[data-theme="dark"][data-accent="violet"] { --blob-forest-1: rgba(85, 64, 138, 0.22); --blob-forest-2: rgba(85, 64, 138, 0.14); }
+ 
+/* --- Font size (html[data-font-size="..."]) - scales the rem-based
+   type throughout the rest of this file off the root font size, rather
+   than needing a size override on every individual rule. */
+html[data-font-size="small"] { font-size: 14px; }
+html[data-font-size="large"] { font-size: 18px; }
+ 
+/* --- Settings page controls --- */
+.settings-option-row {
+  display: flex;
+  gap: 0.6em;
+  margin: 0.6em 0 1.4em;
+  flex-wrap: wrap;
+}
+ 
+.settings-swatch-row {
+  display: flex;
+  gap: 0.8em;
+  margin: 0.6em 0 1.4em;
+  flex-wrap: wrap;
+}
+.settings-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7em 1em;
+  cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+.settings-swatch.selected { border-color: var(--forest); }
+.settings-swatch-colors { display: flex; border-radius: 50%; overflow: hidden; }
+.settings-swatch-colors span { width: 20px; height: 20px; display: inline-block; }
