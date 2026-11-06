@@ -1,67 +1,218 @@
 rules_version = '2';
 service cloud.firestore {
- match /databases/{database}/documents {
- function isSignedIn() {
- return request.auth != null;
- }
- function isSelf(uid) {
- return isSignedIn() && request.auth.uid == uid;
- }
- // Reads this user's membership doc for a given club, to check role.
- // Returns null (via get() 404) if they were never a member.
- function membershipOf(clubId, uid) {
- return get(/databases/$(database)/documents/clubs/$(clubId)/members/$(uid)).data;
- }
- function isClubOfficer(clubId) {
- return isSignedIn() &&
- exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid)) &&
- membershipOf(clubId, request.auth.uid).role in ['president', 'officer'];
- }
- // --- users/{uid} ---
- // Anyone signed in can read basic profiles (needed to show member
- // names on a club page). Only the owner can write their own doc.
- match /users/{uid} {
- allow read: if isSignedIn();
- allow create: if isSelf(uid);
- allow update: if isSelf(uid);
- allow delete: if false;
- }
- // --- clubs/{clubId} ---
- match /clubs/{clubId} {
- allow read: if isSignedIn();
- allow create: if isSignedIn();
- allow update: if isClubOfficer(clubId);
- allow delete: if false;
- // --- clubs/{clubId}/members/{uid} ---
- match /members/{uid} {
- allow read: if isSignedIn();
- // A student can create their own membership doc (join request).
- allow create: if isSelf(uid);
- // A student can delete their own membership (leave / cancel request).
- // An officer can also remove someone else's membership.
- allow delete: if isSelf(uid) || isClubOfficer(clubId);
- // Only officers can change status (approve) or role (promote) -
- // except a member updating nothing but their own doc isn't allowed
- // here, since role/status changes should always go through an officer.
- allow update: if isClubOfficer(clubId);
- }
- // --- clubs/{clubId}/announcements/{announcementId} ---
- match /announcements/{announcementId} {
- allow read: if isSignedIn();
- allow create: if isClubOfficer(clubId);
- allow update, delete: if isClubOfficer(clubId);
- }
- }
- // --- events/{eventId} ---
- match /events/{eventId} {
- allow read: if isSignedIn();
- allow create: if isClubOfficer(request.resource.data.clubId);
- allow update, delete: if isClubOfficer(resource.data.clubId);
- // --- events/{eventId}/attendees/{uid} ---
- match /attendees/{uid} {
- allow read: if isSignedIn();
- allow create, update, delete: if isSelf(uid);
- }
- }
- }
+match /databases/{database}/documents {
+function isSignedIn() {
+return request.auth != null;
+}
+function isSelf(uid) {
+return isSignedIn() && request.auth.uid == uid;
+}
+// Staff / Super Admin is not club-scoped - it's the campus-wide
+// "God mode" role from the top-level users collection. Per team
+// decision, faculty accounts ARE staff (there's no separate
+// self-serve staff signup), so this is the one rule function every
+// Staff-only match below relies on. See src/services/rbac.js's
+// isStaff() for the client-side mirror of this exact check.
+function isStaff() {
+return isSignedIn() &&
+get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'faculty';
+}
+// Reads this user's membership doc for a given club, to check role.
+// Returns null (via get() 404) if they were never a member.
+function membershipOf(clubId, uid) {
+return get(/databases/$(database)/documents/clubs/$(clubId)/members/$(uid)).data;
+}
+// Every non-member club role counts as "an officer" for day-to-day
+// permissions (announcements, events, approving join requests) -
+// 'officer' is kept in this list for backward compatibility with
+// membership docs written before the fuller role hierarchy
+// (President/Co-President/VP/Secretary/Treasurer) existed.
+function isClubOfficer(clubId) {
+return isSignedIn() &&
+exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid)) &&
+membershipOf(clubId, request.auth.uid).role in
+['president', 'co_president', 'vice_president', 'secretary', 'treasurer', 'officer'];
+}
+// Only a President or Co-President can reassign another member's
+// role - mirrors canManageRoles() in src/services/rbac.js. Deciding
+// exactly which NEW role they're allowed to assign (not exceeding
+// their own rank) is left to the client-side check in
+// changeMemberRole() - a known simplification for this scaffold,
+// same spirit as the "deliberately permissive for now" notes
+// elsewhere in this file.
+function canManageClubRoles(clubId) {
+return isSignedIn() &&
+exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid)) &&
+membershipOf(clubId, request.auth.uid).role in ['president', 'co_president'];
+}
+// Club-level financial visibility - mirrors canViewClubFinances() in
+// src/services/rbac.js. Only a club's Treasurer, President, or
+// Co-President can read/file that club's budget requests or its
+// expense ledger; Vice President, Secretary, a legacy generic
+// 'officer', and plain members cannot, by design.
+function isClubFinanceOfficer(clubId) {
+return isSignedIn() &&
+exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid)) &&
+membershipOf(clubId, request.auth.uid).role in ['treasurer', 'president', 'co_president'];
+}
+// Narrower than isClubFinanceOfficer above - actually filing a
+// budget request or logging an expense is Treasurer-only, mirroring
+// canManageClubFinances() in src/services/rbac.js. President/
+// Co-President can still READ this club's financial data
+// (isClubFinanceOfficer, for oversight/sign-off) but cannot
+// themselves create a request or an expense entry.
+function isClubTreasurer(clubId) {
+return isSignedIn() &&
+exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid)) &&
+membershipOf(clubId, request.auth.uid).role == 'treasurer';
+}
+// Event/room logistics - mirrors canManageLogistics() in
+// src/services/rbac.js. President, Co-President, and Vice President
+// can file a room booking for their club; Treasurer and Secretary
+// cannot.
+function isClubLogisticsOfficer(clubId) {
+return isSignedIn() &&
+exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid)) &&
+membershipOf(clubId, request.auth.uid).role in ['president', 'co_president',
+'vice_president'];
+}
+// --- users/{uid} ---
+// Anyone signed in can read basic profiles (needed to show member
+// names on a club page). Only the owner can write their own doc.
+match /users/{uid} {
+allow read: if isSignedIn();
+allow create: if isSelf(uid);
+allow update: if isSelf(uid);
+allow delete: if false;
+}
+// --- clubs/{clubId} ---
+match /clubs/{clubId} {
+allow read: if isSignedIn();
+allow create: if isSignedIn();
+// Officers edit their own club's info; Staff can additionally
+// change status (approve/deny/archive/restore) or override
+// anything else. Not split by field - a known simplification;
+// see Issue #19's comment on firestore.rules for the same
+// tradeoff made earlier in this project.
+allow update: if isClubOfficer(clubId) || isStaff();
+allow delete: if false;
+// --- clubs/{clubId}/members/{uid} ---
+match /members/{uid} {
+allow read: if isSignedIn();
+// A student can create their own membership doc (join request).
+allow create: if isSelf(uid);
+// A student can delete their own membership (leave / cancel request).
+// An officer can also remove someone else's membership.
+allow delete: if isSelf(uid) || isClubOfficer(clubId);
+// Role reassignment (promote/demote) requires President/
+// Co-President; approving a pending join request (status only)
+// stays available to any officer, matching the existing
+// Members panel's "Approve" button.
+allow update: if canManageClubRoles(clubId) || isClubOfficer(clubId) || isStaff();
+}
+// --- clubs/{clubId}/announcements/{announcementId} ---
+match /announcements/{announcementId} {
+allow read: if isSignedIn();
+allow create: if isClubOfficer(clubId);
+allow update, delete: if isClubOfficer(clubId);
+}
+// --- clubs/{clubId}/messages/{messageId} ---
+// Scaffold-level chat: any signed-in user can read a club's
+// messages (matches how announcements/events already behave -
+// membership isn't re-checked per read anywhere else in this
+// file either) and post as themselves. Messages are immutable -
+// no edit/delete - keeping this collection append-only and simple.
+match /messages/{messageId} {
+allow read: if isSignedIn();
+allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+allow update, delete: if false;
+}
+// --- clubs/{clubId}/expenses/{expenseId} ---
+// The club's own expense ledger, feeding its Club Finances panel.
+// Append-only (see services/admin.js's logClubExpense comment) and
+// restricted to that club's finance officers, plus Staff for
+// campus-wide oversight - nobody else can read or write it.
+match /expenses/{expenseId} {
+allow read: if isClubFinanceOfficer(clubId) || isStaff();
+allow create: if isClubTreasurer(clubId);
+allow update, delete: if false;
+}
+}
+// --- events/{eventId} ---
+match /events/{eventId} {
+allow read: if isSignedIn();
+allow create: if isClubOfficer(request.resource.data.clubId);
+allow update, delete: if isClubOfficer(resource.data.clubId);
+// --- events/{eventId}/attendees/{uid} ---
+match /attendees/{uid} {
+allow read: if isSignedIn();
+allow create, update, delete: if isSelf(uid);
+}
+}
+// --- auditLog/{id} ---
+// Written by every Staff-guarded mutation in services/admin.js and
+// services/clubs.js. Reading the trail is Staff-only (it's meant
+// for the Command Center, not every signed-in user); writing is
+// open to any signed-in user because the log entry always records
+// the TRUE actor's own uid (request.auth.uid isn't itself checked
+// against actorUid here - a known simplification, since nothing
+// sensitive is exposed by a log entry existing, only by reading the
+// trail, which stays Staff-only).
+match /auditLog/{id} {
+allow read: if isStaff();
+allow create: if isSignedIn();
+allow update, delete: if false;
+}
+// --- budgetRequests/{id} ---
+match /budgetRequests/{id} {
+// A club's finance officers (Treasurer/President/Co-President) can
+// read every request their own club has ever filed for its Club
+// Finances history, in addition to Staff (campus-wide) and the
+// original requester (their own request, whatever their role).
+allow read: if isStaff() ||
+(isSignedIn() && resource.data.requestedBy == request.auth.uid) ||
+isClubFinanceOfficer(resource.data.clubId);
+allow create: if isClubTreasurer(request.resource.data.clubId);
+allow update: if isStaff();
+allow delete: if false;
+}
+// --- roomBookings/{id} ---
+match /roomBookings/{id} {
+// A club's logistics officers (President/Co-President/VP) can
+// read every booking their own club has ever filed, in addition to
+// Staff (campus-wide) and the original requester.
+allow read: if isStaff() ||
+(isSignedIn() && resource.data.requestedBy == request.auth.uid) ||
+isClubLogisticsOfficer(resource.data.clubId);
+allow create: if isClubLogisticsOfficer(request.resource.data.clubId);
+allow update: if isStaff();
+allow delete: if false;
+}
+// --- settings/{id} ---
+// Currently just settings/budget (the campus-wide remaining-budget
+// figure shown in Quick Stats). Any signed-in user can read it;
+// only Staff can change it.
+match /settings/{id} {
+allow read: if isSignedIn();
+allow write: if isStaff();
+}
+// --- schoolNews/{id}, academicCalendar/{id}, campusDigest/{id} ---
+// Written only by scripts/scrape-news.js via the Firebase Admin SDK,
+// which bypasses these rules entirely (admin credentials are never
+// subject to security rules). Every client write is rejected here on
+// purpose - nobody signed in through the normal app should ever be
+// able to edit scraped news or calendar data.
+match /schoolNews/{id} {
+allow read: if isSignedIn();
+allow write: if false;
+}
+match /academicCalendar/{id} {
+allow read: if isSignedIn();
+allow write: if false;
+}
+match /campusDigest/{id} {
+allow read: if isSignedIn();
+allow write: if false;
+}
+}
 }
