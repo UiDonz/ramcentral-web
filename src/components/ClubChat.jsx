@@ -51,7 +51,7 @@ export default function ClubChat({ clubId, uid, name }) {
   }
 
   return (
-    <div className="club-chat">
+    <><div className="club-chat">
       <div className="club-chat-messages" ref={listRef}>
         {loading && <p className="empty-state">Loading chat...</p>}
         {error && <p className="form-error">{error}</p>}
@@ -71,10 +71,8 @@ export default function ClubChat({ clubId, uid, name }) {
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Message the club..."
           maxLength={1000}
-          aria-label="Message the club"
-        />
+          aria-label="Message the club" />
       </form>
-    </div>
-    <button type="submit" disabled={sending || !draft.trim()}>Send</button>
+    </div><button type="submit" disabled={sending || !draft.trim()}>Send</button></>
   );
 }
