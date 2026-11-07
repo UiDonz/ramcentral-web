@@ -61,6 +61,12 @@ export async function rsvpToEvent(eventId, uid) {
   });
 }
 
+// Cancelling an event deletes it, which also removes it from the News page.
+// The UI only offers this to a club's President, Co-President or Vice President.
+export async function cancelEvent(eventId) {
+  await deleteDoc(doc(db, 'events', eventId));
+}
+
 export async function cancelRsvp(eventId, uid) {
   await deleteDoc(doc(db, 'events', eventId, 'attendees', uid));
 }

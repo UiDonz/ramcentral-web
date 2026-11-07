@@ -21,7 +21,7 @@ import {
   listenToAnnouncements,
   postAnnouncement
 } from '../services/clubs';
-import { listenToClubEvents, createEvent, rsvpToEvent } from '../services/events';
+import { listenToClubEvents, createEvent, rsvpToEvent, cancelEvent } from '../services/events';
 import {
   isClubOfficerRole,
   canManageRoles,
@@ -57,6 +57,8 @@ export default function ClubDetail() {
   const [infoForm, setInfoForm] = useState(null);
   const [memberNames, setMemberNames] = useState({});
   const [rbacError, setRbacError] = useState(null);
+  const [eventsLoadError, setEventsLoadError] = useState(null);
+  const [eventMessage, setEventMessage] = useState(null); // { type: 'error' | 'ok', text }
   const [budgetRequests, setBudgetRequests] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [budgetForm, setBudgetForm] = useState({ amount: '', reason: '' });
@@ -79,7 +81,9 @@ export default function ClubDetail() {
   }, [clubId]);
 
   useEffect(() => {
-    const unsub = listenToClubEvents(clubId, setEvents);
+    const unsub = listenToClubEvents(clubId, setEvents, (err) =>
+      setEventsLoadError(`${err.code || 'error'}: ${err.message}`)
+    );
     return unsub;
   }, [clubId]);
 
@@ -179,11 +183,34 @@ export default function ClubDetail() {
     setAnnouncementForm({ title: '', body: '' });
   }
 
+  // Only the President, Co-President and Vice President can cancel an event.
+  const canCancelEvents =
+    myMembership?.status === 'approved' &&
+    ['president', 'co_president', 'vice_president'].includes(myMembership?.role);
+
+  async function handleCancelEvent(ev) {
+    if (!window.confirm(`Cancel "${ev.title}"? This removes it for everyone.`)) return;
+    try {
+      await cancelEvent(ev.id);
+      setEventMessage({ type: 'ok', text: 'Event cancelled.' });
+    } catch (err) {
+      setEventMessage({ type: 'error', text: `Couldn't cancel the event: ${err.message}` });
+    }
+  }
+
   async function handleCreateEvent(e) {
     e.preventDefault();
-    if (!eventForm.title || !eventForm.dateTime) return;
-    await createEvent({ clubId, createdBy: currentUser.uid, ...eventForm });
-    setEventForm({ title: '', description: '', location: '', dateTime: '' });
+    if (!eventForm.title || !eventForm.dateTime) {
+      setEventMessage({ type: 'error', text: 'Please enter an event title and a date and time.' });
+      return;
+    }
+    try {
+      await createEvent({ clubId, createdBy: currentUser.uid, ...eventForm });
+      setEventForm({ title: '', description: '', location: '', dateTime: '' });
+      setEventMessage({ type: 'ok', text: 'Event created.' });
+    } catch (err) {
+      setEventMessage({ type: 'error', text: `Couldn't create the event: ${err.message}` });
+    }
   }
 
   async function handleSaveInfo(e) {
@@ -382,16 +409,29 @@ export default function ClubDetail() {
               onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
             />
             <button type="submit">Create event</button>
+            {eventMessage && (
+              <p className={eventMessage.type === 'error' ? 'form-error' : 'form-success'}>
+                {eventMessage.text}
+              </p>
+            )}
           </form>
         )}
-        {events.length === 0 && <p className="empty-state">No upcoming events.</p>}
+        {eventsLoadError && (
+          <p className="form-error">Couldn't load this club's events ({eventsLoadError})</p>
+        )}
+        {!eventsLoadError && events.length === 0 && <p className="empty-state">No upcoming events.</p>}
         {events.map((ev) => (
           <div key={ev.id} className="event-card">
             <h3>{ev.title}</h3>
-            <p>{new Date(ev.dateTime.seconds ? ev.dateTime.seconds * 1000 : ev.dateTime).toLocaleString()}</p>
+            <p>{new Date(ev.dateTime.seconds ? ev.dateTime.seconds * 1000 : ev.dateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
             {ev.location && <p>{ev.location}</p>}
             {isApprovedMember && (
               <button className="secondary" onClick={() => rsvpToEvent(ev.id, currentUser.uid)}>RSVP</button>
+            )}
+            {canCancelEvents && (
+              <button className="secondary" style={{ marginLeft: '0.6em' }} onClick={() => handleCancelEvent(ev)}>
+                Cancel event
+              </button>
             )}
           </div>
         ))}

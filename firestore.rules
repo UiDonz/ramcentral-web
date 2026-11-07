@@ -7,6 +7,12 @@ return request.auth != null;
 function isSelf(uid) {
 return isSignedIn() && request.auth.uid == uid;
 }
+// Lets a signed-in user run a query across every club's members subcollection
+// (Home uses one to find "My clubs"). The per-club members rule below does not
+// apply to those cross-club queries, so they need this rule of their own.
+match /{path=**}/members/{uid} {
+allow read: if isSignedIn();
+}
 // Staff / Super Admin is not club-scoped - it's the campus-wide
 // "God mode" role from the top-level users collection. Per team
 // decision, faculty accounts ARE staff (there's no separate

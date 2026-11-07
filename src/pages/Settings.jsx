@@ -86,8 +86,7 @@ export default function Settings() {
       <section className="detail-section">
         <h2>Home page layout</h2>
         <p className="page-subtitle">
-          Reorder the sections on your Clubs (Home) page. More pages will get this same control
-          over time - Home is the first.
+      
         </p>
         {settings.homeLayout.map((key, i) => (
           <div key={key} className="member-row">
