@@ -802,3 +802,224 @@ html[data-font-size="large"] { font-size: 18px; }
  letter-spacing: 0.03em;
 }
 .admin-table tbody tr:hover { background: rgba(28, 61, 46, 0.04); }
+/* Sidebar base styles - paste at the very bottom of src/styles/app.css */
+.sidebar-brand {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--gold);
+  color: var(--forest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  margin-bottom: 1.2em;
+}
+.sidebar-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 0.4em;
+}
+.sidebar-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 60px;
+  padding: 0.5em 0.3em;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 0.68rem;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.sidebar-link:hover { color: rgba(255, 255, 255, 0.85); }
+.sidebar-link.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+.sidebar-spacer { flex: 1; }
+.sidebar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 0.5em;
+}
+.sidebar-logout {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 0.3em;
+}
+.sidebar-logout:hover { background: rgba(255, 255, 255, 0.08); color: var(--white); }
+/* News page + calendar fixes - paste at the very bottom of src/styles/app.css */
+
+/* The app shell wrapper in App.jsx had no rule at all. */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* News.jsx uses <main className="news-page">, but the only rule for it
+   was .page.news-page (which needs both classes), so the page had no
+   padding and was jammed against the sidebar. */
+.news-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5em 2em 5em;
+}
+
+/* The red "Firestore denied access" message had no styling. */
+.news-error {
+  margin: 1em 0;
+  padding: 0.8em 1em;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  background: rgba(176, 58, 46, 0.08);
+  color: var(--danger);
+}
+
+/* Month name and arrows were var(--forest) / the link color, which turns
+   dark purple on the dark theme. --ink is always readable. */
+.calendar-month-label { color: var(--ink); }
+.calendar .link-button { color: var(--ink); }
+/* News page + calendar fixes */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.news-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5em 2em 5em;
+}
+
+.news-error {
+  margin: 1em 0;
+  padding: 0.8em 1em;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  background: rgba(176, 58, 46, 0.08);
+  color: var(--danger);
+}
+
+.calendar-month-label { color: var(--ink); }
+.calendar .link-button { color: var(--ink); }
+
+/* Today's Overview grows to match the left column */
+.news-top-row { align-items: stretch; }
+.news-today-col { display: flex; flex-direction: column; }
+.today-card {
+  flex: 1;
+  height: auto;
+  min-height: 420px;
+}
+
+/* Busy days scroll inside the day panel instead of growing the page */
+.day-panel {
+  max-height: 520px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+}
+.day-panel::-webkit-scrollbar { width: 6px; }
+.day-panel::-webkit-scrollbar-track { background: transparent; }
+.day-panel::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+/* Day panel cards (News.jsx DayEventCard) */
+.day-event-card {
+  display: block;
+  padding: 0.65em 0.7em;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 0.5em;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.day-event-card:last-child { margin-bottom: 0; }
+.day-event-card:hover {
+  border-color: var(--gold);
+  background: rgba(201, 154, 60, 0.05);
+}
+.day-event-card .day-bullet { margin-bottom: 0; }
+.day-event-card-detail {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 0.15em;
+}
+/* Date heading was var(--forest), unreadable on the dark theme */
+.day-panel-date { color: var(--ink); }
+
+/* Three feed boxes side by side; one column on phones */
+.news-bottom-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1em;
+  margin-top: 1.2em;
+}
+@media (max-width: 760px) {
+  .news-bottom-row { grid-template-columns: 1fr; }
+  .news-top-row { flex-direction: column; }
+}
+
+/* Real officer-created club events get their own gold tag, and the three
+   feed boxes are a little taller. */
+.feed-item-tag.tag-clubevent { color: #d9a73f; background: rgba(201, 154, 60, 0.18); }
+.feed-box-large { height: 270px; }
+
+/* Feed boxes sit inside their own rounded panel, like Calendar + Today */
+.news-hero + .news-hero { margin-top: 1.2em; }
+.news-hero > .news-bottom-row { margin-top: 0; }
+
+/* Thin gold page scroll bar, only while the News page is showing */
+html:has(.news-page) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+}
+
+/* Form fields and submit buttons had no text color, so in dark mode they fell
+   back to black (typed text, the date, and the "Create event" label). */
+input, textarea, select { color: var(--ink); }
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select { color-scheme: dark; }
+html[data-theme="dark"] form button[type="submit"] { color: #ffffff; }
+
+/* Stacked fields in a form touched each other, so the next field painted over
+   the focus outline of the one above it. A small gap lets the full outline show. */
+.inline-form > input,
+.inline-form > textarea,
+.inline-form > select {
+  display: block;
+  margin-bottom: 0.7em;
+}
+.inline-form input:focus-visible,
+.inline-form textarea:focus-visible,
+.inline-form select:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+.form-success { color: #4caf7a; font-size: 0.88rem; margin: 0.6em 0 0; }
+
+/* Outline buttons (RSVP, Deny, etc.) used the dark green --forest for text and
+   border, which is almost invisible on the dark theme. */
+html[data-theme="dark"] button.secondary {
+  color: var(--ink);
+  border-color: var(--muted);
+}
+html[data-theme="dark"] button.secondary:hover { background: rgba(255, 255, 255, 0.08); }
