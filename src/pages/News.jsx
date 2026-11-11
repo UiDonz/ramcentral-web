@@ -14,19 +14,13 @@ const ACADEMIC_CALENDAR_URL = 'https://www.farmingdale.edu/calendar/academic/ind
 // How fast the auto-scroll feeds move, in pixels per second.
 const AUTO_SCROLL_SPEED = 22;
 
-// One color per category, used everywhere on this page that shows a
-// category at a glance: the calendar's day dots, the day-click bullets, and
-// now the small tag on every feed/overview card too - so the same color
-// always means the same thing no matter where you see it.
+// One color per category, used on the calendar dots, day bullets and feed/overview tags.
 const CATEGORY_COLORS = { academic: '#0c447c', clubs: '#72243e', campus: '#27500a' };
 const CATEGORY_LABELS = { academic: 'ACADEMIC', clubs: 'CLUBS', campus: 'CAMPUS' };
 
-// A real, officer-created club event is still shown with the "clubs" color,
-// just with its own more specific label (and it's the one case a card's tag
-// isn't just "whatever section this card is in" - see getItemTag below).
+// A club-created event keeps the "clubs" color but gets its own label.
 function getItemTag(item, sectionCategory) {
-  // Gold tag only for events from a club the signed-in user belongs to;
-  // everyone else sees the regular clubs color.
+  // Gold tag only for events from a club the signed-in user belongs to.
   if (item?.isClubEvent) {
     return { category: item.isMine ? 'clubevent' : 'clubs', label: 'CLUB EVENT' };
   }
@@ -39,10 +33,8 @@ function CategoryTag({ tag }) {
   return <span className={`feed-item-tag tag-${tag.category}`}>{tag.label}</span>;
 }
 
-// Today's digest is one AI-written paragraph with no per-sentence category
-// data attached, so its tag is a best guess from keywords - the same idea
-// as the scraper's own categorize() function, just run client-side against
-// each split-out sentence instead of a headline.
+// Today's digest has no category data, so each sentence's tag is guessed from keywords
+// (same idea as the scraper's categorize()).
 const CLUB_KEYWORDS = ['club', 'fair', 'involvement', 'student org', 'society', 'fraternity', 'sorority', 'rsvp'];
 const CAMPUS_KEYWORDS = ['rams', 'soccer', 'basketball', 'volleyball', 'sports', 'athletics', 'award', 'anniversary', 'campus'];
 function guessBulletCategory(text) {
@@ -57,9 +49,7 @@ function todayKey() {
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 }
 
-// Firestore only gives us an error code + message, not something a
-// non-dev teammate can act on - translate the couple of codes we
-// actually expect to hit while this feature is still being wired up.
+// Translates the Firestore error codes we expect into messages a teammate can act on.
 function describeNewsError(err) {
   if (!err) return null;
   if (err.code === 'failed-precondition') {
@@ -74,11 +64,7 @@ function describeNewsError(err) {
   return `Couldn't load news/calendar data (${err.code || 'unknown error'}): ${err.message}`;
 }
 
-// The scraper's AI-written summaries/digest were written as chat replies,
-// so they sometimes contain markdown bold (**like this**) - without this,
-// the raw asterisks show up literally and make the text look broken/jumbled.
-// This only handles **bold** (the one pattern that actually shows up),
-// not full markdown.
+// Scraper summaries can contain **bold** markdown; this renders only that pattern.
 function renderWithBold(text) {
   if (!text) return text;
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -91,14 +77,7 @@ function renderWithBold(text) {
   );
 }
 
-// The daily digest comes back from the scraper as one dense paragraph -
-// readable enough in a chat, but a wall of text in a UI. This breaks it
-// into individual sentences so each can be shown as its own separated
-// row (same "one item, clearly apart from the next" idea as a news
-// card), and drops the short "today at a glance" framing sentences the
-// scraper's prompt tends to produce (e.g. a bare "**Today at a Glance**"
-// or "Here's a friendly ... overview:") since they just repeat the
-// "Overview" label already shown above the list.
+// Splits the digest paragraph into one bullet per sentence, dropping 'at a glance' framing sentences.
 function splitDigestIntoBullets(text) {
   if (!text) return [];
   const sentences = text
@@ -114,10 +93,7 @@ function splitDigestIntoBullets(text) {
   });
 }
 
-// A club's own officers can create real events from the club page - those
-// carry a clubId (see buildClubEventItem below) instead of an external
-// `url`, so they read the club's actual RSVP page instead of the "read the
-// article" pattern the scraped items use.
+// Club events carry a clubId (not a url), so they open the club's RSVP page.
 function formatEventDateTime(dateTime) {
   const ms = dateTime?.seconds != null ? dateTime.seconds * 1000 : dateTime;
   const d = new Date(ms);
@@ -159,11 +135,7 @@ function buildClubEventItem(ev, clubName, isMine) {
   };
 }
 
-// Clicking a story now zooms it into a large centered panel (see ZoomCard)
-// instead of expanding in place - which also means it's no longer limited
-// to the tiny fixed-height scroll box a long summary used to get clipped
-// inside of. onZoomChange bubbles up to AutoScrollFeed so it can pause the
-// auto-scroll while a story from that feed is open.
+// Clicking a story zooms it into a centered ZoomCard; onZoomChange lets the feed pause auto-scroll.
 function FeedItem({ item, sectionCategory, onZoomChange }) {
   const tag = getItemTag(item, sectionCategory);
   return (
@@ -210,11 +182,7 @@ function FeedItem({ item, sectionCategory, onZoomChange }) {
   );
 }
 
-// A non-interactive stand-in for FeedItem, used only for the auto-scroll
-// feed's duplicate copy (see AutoScrollFeed below). It stays permanently
-// "collapsed" so its height always matches the real item's collapsed
-// height - the seamless-loop trick depends on both copies being the same
-// total height.
+// Non-interactive copy used by AutoScrollFeed's loop; stays collapsed so both copies are the same height.
 function TickerGhostItem({ item, sectionCategory }) {
   const tag = getItemTag(item, sectionCategory);
   return (
@@ -230,11 +198,7 @@ function TickerGhostItem({ item, sectionCategory }) {
   );
 }
 
-// A feed list that scrolls itself when you're not touching it, and hands
-// control back to a normal, native scrollbar the moment your cursor is
-// over it (wheel/drag/trackpad all just work, since it's a real
-// overflow-y: auto element the whole time - hovering only stops the
-// automatic increment, it never disables scrolling).
+// Feed that auto-scrolls until hovered, then hands control back to native scrolling.
 
 function AutoScrollFeed({ items, size, category, autoScroll = true }) {
   const containerRef = useRef(null);
@@ -323,10 +287,7 @@ function AutoScrollFeed({ items, size, category, autoScroll = true }) {
   );
 }
 
-// Same zoom-to-center treatment as a feed card, so a Today item behaves
-// exactly like the ones below it instead of just being flat text - even
-// though there's no extra detail to reveal beyond the sentence itself, the
-// expanded panel shows it bigger and centered, same as the others.
+// Same zoom-to-center behavior as the feed cards.
 function TodayBulletItem({ sentence }) {
   const tag = { category: guessBulletCategory(sentence), label: null };
   tag.label = CATEGORY_LABELS[tag.category];
@@ -353,13 +314,7 @@ function TodayBulletItem({ sentence }) {
   );
 }
 
-// One card per thing happening that day - a calendar event, or a news
-// item published that date. No AI call needed here: each card just shows
-// the real scraped title/description directly, which is more trustworthy
-// for "is there a governance meeting today" than a paraphrased summary
-// would be. Given the same click-to-enlarge treatment as every other card
-// on this page (FeedItem, TodayBulletItem) via ZoomCard, instead of being
-// a flat, non-interactive row with only a tiny outbound link.
+// One card per calendar event or news item on the selected day, showing the real scraped text.
 function DayEventCard({ color, tag, title, detail, linkLabel, linkUrl }) {
   return (
     <ZoomCard
@@ -395,11 +350,7 @@ function DayEventCard({ color, tag, title, detail, linkLabel, linkUrl }) {
   );
 }
 
-// Only ever rendered for the two non-list states - still loading, or
-// loaded-but-genuinely-empty. Once there are real items, AutoScrollFeed
-// takes over rendering entirely (this used to also render the item list
-// itself, but that path was effectively dead code: it was only ever
-// called when there were zero items to render).
+// Only for the loading and empty states; AutoScrollFeed renders the actual items.
 function FeedSection({ loading, loadingLabel, emptyLabel }) {
   if (loading) return <LoadingSpinner label={loadingLabel} />;
   return <p className="day-panel-empty">{emptyLabel}</p>;
@@ -438,10 +389,7 @@ export default function News() {
     () => listenToAcademicCalendar(setCalendarEvents, (err) => setLoadError(describeNewsError(err))),
     []
   );
-  // Real, officer-created club events (the same ones ClubDetail/Events show)
-  // - these go in the "Clubs & fairs" feed ahead of anything the scraper
-  // found, since they're actual RamCentral activity rather than a guess
-  // from a headline's keywords.
+  // Real club-created events go ahead of scraped items in the 'Clubs & fairs' feed.
   useEffect(() => listenToUpcomingEvents(setClubEvents), []);
   useEffect(
     () => listenToClubs((clubs) => setClubNames(Object.fromEntries(clubs.map((c) => [c.id, c.name])))),
@@ -497,15 +445,8 @@ export default function News() {
     getDigest(todayKey()).then(setTodayDigest);
   }, []);
 
-  // Auto-scrolls the whole News page itself when you're not doing anything
-  // scroll-related, and gets out of the way the instant you are - scoped to
-  // just this page (not the whole app) so it never fights you while filling
-  // out a form elsewhere, like Login or Create Club. "Doing something"
-  // means an actual scroll input (wheel, touch, arrow/page keys, grabbing
-  // the scrollbar) rather than just mouse movement, so idly moving the
-  // mouse while reading doesn't constantly reset the idle timer. It also
-  // respects the zoom-card scroll lock (see ZoomCard.jsx) and reduced-
-  // motion, and loops back to the top once it reaches the bottom.
+  // Auto-scrolls the News page while idle; stops on real scroll input (wheel, touch, keys, scrollbar),
+  // respects the ZoomCard scroll lock and reduced motion, and loops back to the top.
   useEffect(() => {
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
@@ -612,11 +553,7 @@ export default function News() {
             <div className="section-label">Calendar</div>
             <Calendar events={calendarEvents} onDayClick={handleDayClick} />
 
-            {/* Placed directly under the calendar (rather than as its own
-                full-width block further down the page) so clicking a date
-                shows its detail right where you clicked, instead of
-                leaving a stretch of empty space between the calendar and
-                its own answer. */}
+            {/* Directly under the calendar so a clicked date's detail shows right where you clicked. */}
             {dayPanel && (
               <div className="day-panel">
                 <div className="day-panel-date">{dayPanel.label}</div>

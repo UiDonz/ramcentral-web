@@ -230,13 +230,7 @@ outline: 2px solid var(--forest);
 outline-offset: 3px;
 }
 
-/* --- Sprint 3 additions to src/styles/app.css (appended below the
-existing Sprint 1/2 rules - .club-card, .auth-form, etc. are unchanged
-and are not repeated here). --- */
-/* Calendar: one dot per category present that day (academic/clubs/campus -
-colors set inline from Calendar.jsx to match the news feeds below), so a
-glance at the month view already hints at what kind of day it is before
-clicking. */
+/* Calendar: one dot per category present that day (colors set inline from Calendar.jsx). */
 .calendar-dot-row { display: flex; gap: 3px; height: 4px; align-items: center; }
 .calendar-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
 /* News page */
@@ -290,12 +284,7 @@ margin-top: 0.8em;
 font-size: 0.85rem;
 color: var(--ink);
 }
-/* Today overview card - given noticeably more room (was a cramped 220px)
-and scrolls internally past that (same themed thin scrollbar as the feed
-tickers) instead of growing the page when there's a lot going on. Each
-thing happening today is its own bordered card (.today-bullet), same
-idea as a feed-item, instead of a dense run-on paragraph or tight
-hairline-separated rows. */
+/* Today overview card: scrolls internally; each item is its own bordered card (.today-bullet). */
 .today-card {
 border: 1px solid var(--gold);
 border-radius: 14px;
@@ -354,8 +343,7 @@ position: relative;
 }
 .feed-box-large { height: 220px; }
 .feed-box-small { height: 160px; }
-/* Thin gold accent bar across the top of each feed box - a small "banner"
-touch so these boxes don't read as plain bordered rectangles. */
+/* Thin gold accent bar across the top of each feed box. */
 .feed-box::before {
 content: '';
 position: absolute;
@@ -379,14 +367,9 @@ scrollbar-color: var(--gold) transparent;
 .feed-ticker-set { display: flex; flex-direction: column; }
 .feed-item { border-bottom: 1px solid var(--border); }
 .feed-item:last-child { border-bottom: none; }
-/* Real, officer-created club events (vs. the scraper's keyword-guessed
-items) get a tinted background so it's clear why they're at the top of
-the list and not from the same source as everything below them. */
+/* Real club-created events get a tinted background so they stand out from scraped items. */
 .feed-item-club { background: rgba(114, 36, 62, 0.05); }
-/* One small colored tag per category, on every card that shows one
-(feed items, Today's overview bullets) - same three colors as the
-calendar dots and day-click bullets, so the color always means the same
-thing everywhere on this page. */
+/* Small colored category tag on every card; same colors as the calendar dots. */
 .feed-item-tag {
 display: inline-block;
 font-size: 0.62rem;
@@ -416,14 +399,9 @@ cursor: pointer;
 .feed-item-title { font-size: 0.85rem; font-weight: 500; color: var(--ink); }
 .feed-item-date { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
 .feed-item-link { font-size: 0.78rem; color: var(--gold); font-weight: 500; }
-/* Any card driven by ZoomCard (news items, club cards, event cards) is a
-plain div with role="button" rather than a real <a>/<button>, so the
-pointer cursor needs to be opted back in explicitly. */
+/* ZoomCard cards are divs with role="button", so the pointer cursor is set explicitly. */
 [role="button"] { cursor: pointer; }
-/* ZoomCard (Medium-style shared-element zoom). The portal panel starts
-pinned to the clicked card's exact on-screen position (inline style, set
-from JS) and animates to/from the centered ".open" layout below - see
-ZoomCard.jsx for how the two states get bridged. */
+/* ZoomCard: the panel starts pinned to the clicked card's position (inline style) and animates to/from the centered .open layout. */
 .zoom-overlay {
 position: fixed;
 inset: 0;
@@ -512,28 +490,16 @@ body.zoom-locked { overflow: hidden; }
   margin-left: 88px;
 }
  
-/* === :root also gained three --blob-* variables, extracted from what were
-   three literal rgba() values inline in body's background-image, so an
-   accent theme below can recolor the background wash too: === */
+/* :root also holds three --blob-* variables so accent themes can recolor the background wash. */
 :root {
-  /* ...existing tokens (--forest, --gold, --cream, --ink, --muted,
-     --border, --danger, --white) unchanged... */
   --blob-gold: rgba(201, 154, 60, 0.12);
   --blob-forest-1: rgba(28, 61, 46, 0.10);
   --blob-forest-2: rgba(28, 61, 46, 0.06);
 }
-/* body's background-image now reads var(--blob-gold) / var(--blob-forest-1)
-   / var(--blob-forest-2) instead of those same three values written out
-   literally - unchanged in light/forest (the app's default), but now
-   overridable per theme/accent below. */
+/* body's background-image reads the --blob-* variables (same look by default, overridable per theme/accent). */
  
  
-/* ---------------------------------------------------------------- */
-/* Settings: appearance (theme/accent/font size) + Home layout reorder.
-   Purely additive - nothing above this point was changed except
-   replacing three literal rgba() values in :root/body with the
-   equivalent --blob-* variables (see the comment on :root), so an
-   accent override below can recolor the background wash too. */
+/* Settings: appearance (theme/accent/font size) + Home layout reorder. */
  
 /* --- Dark mode (html[data-theme="dark"], set by SettingsContext) --- */
 html[data-theme="dark"] {
@@ -547,13 +513,8 @@ html[data-theme="dark"] {
   --blob-forest-2: rgba(47, 89, 65, 0.14);
 }
  
-/* --- Accent themes (html[data-accent="..."], set by SettingsContext).
-   "forest" is the existing default and needs no override - these three
-   just recolor the same --forest/--forest-light/--gold/--blob-* tokens
-   everything else in this file already reads from. --danger is left
-   alone on purpose (it's a status color, not a brand color). --white
-   stays the same too within a given theme (light/dark already covers
-   surface color; accent only changes the brand hue). */
+/* --- Accent themes (html[data-accent]): "forest" is the default; these recolor the --forest/--gold/--blob-* tokens.
+   --danger stays the same (it's a status color, not a brand color). --- */
 html[data-accent="ocean"] {
   --forest: #0f3a52;
   --forest-light: #1f6288;
@@ -578,16 +539,12 @@ html[data-accent="violet"] {
   --blob-forest-1: rgba(58, 44, 92, 0.11);
   --blob-forest-2: rgba(58, 44, 92, 0.06);
 }
-/* Dark mode + a non-default accent both apply at once (two separate
-   attributes) - brighten the forest blob a bit more in that combination,
-   same reasoning as the plain dark-mode override above. */
+/* Dark mode + a non-default accent: brighten the forest blob a bit more. */
 html[data-theme="dark"][data-accent="ocean"] { --blob-forest-1: rgba(31, 98, 136, 0.22); --blob-forest-2: rgba(31, 98, 136, 0.14); }
 html[data-theme="dark"][data-accent="crimson"] { --blob-forest-1: rgba(125, 44, 59, 0.22); --blob-forest-2: rgba(125, 44, 59, 0.14); }
 html[data-theme="dark"][data-accent="violet"] { --blob-forest-1: rgba(85, 64, 138, 0.22); --blob-forest-2: rgba(85, 64, 138, 0.14); }
  
-/* --- Font size (html[data-font-size="..."]) - scales the rem-based
-   type throughout the rest of this file off the root font size, rather
-   than needing a size override on every individual rule. */
+/* --- Font size (html[data-font-size]) - scales the rem-based type from the root font size --- */
 html[data-font-size="small"] { font-size: 14px; }
 html[data-font-size="large"] { font-size: 18px; }
  
@@ -622,8 +579,6 @@ html[data-font-size="large"] { font-size: 18px; }
 .settings-swatch.selected { border-color: var(--forest); }
 .settings-swatch-colors { display: flex; border-radius: 50%; overflow: hidden; }
 .settings-swatch-colors span { width: 20px; height: 20px; display: inline-block; }
-/* Calendar base rules (missing from the Sprint 3 CSS; the dot
- rules are already in your file, so they are not repeated). */
 .calendar {
  background: var(--white);
  border: 1px solid var(--border);
@@ -673,8 +628,7 @@ html[data-font-size="large"] { font-size: 18px; }
  }
 .calendar-cell.muted { color: #d8d4c6; cursor: default; }
 .calendar-cell.today { background: rgba(28, 61, 46, 0.08); }
-/* Certified-officer badge, shown next to a member's name in the
- Members list on ClubDetail. */
+/* Certified-officer badge, shown next to a member's name in the Members list. */
 .certified-badge {
  display: inline-block;
  background: rgba(28, 61, 46, 0.1);
@@ -684,8 +638,7 @@ html[data-font-size="large"] { font-size: 18px; }
  padding: 0.2em 0.6em;
  border-radius: 20px;
 }
-/* Role-reassignment dropdown (President/Co-President only), inline in
- a .member-row next to the badge. */
+/* Role-reassignment dropdown (President/Co-President only). */
 .role-select {
  width: auto;
  font-size: 0.82rem;
@@ -695,9 +648,7 @@ html[data-font-size="large"] { font-size: 18px; }
  color: var(--ink);
  background: var(--white);
 }
-/* Status pill on the club status banner (ClubDetail) and the Master
- Club Directory table (AdminDashboard) - color keys off the
- status-{value} modifier class rendered alongside it. */
+/* Status pill on the club status banner and Master Club Directory; color follows the status-{value} class. */
 .status-pill {
  display: inline-block;
  font-size: 0.75rem;
@@ -802,7 +753,7 @@ html[data-font-size="large"] { font-size: 18px; }
  letter-spacing: 0.03em;
 }
 .admin-table tbody tr:hover { background: rgba(28, 61, 46, 0.04); }
-/* Sidebar base styles - paste at the very bottom of src/styles/app.css */
+/* Sidebar base styles */
 .sidebar-brand {
   width: 34px;
   height: 34px;
@@ -866,7 +817,7 @@ html[data-font-size="large"] { font-size: 18px; }
   padding: 0.3em;
 }
 .sidebar-logout:hover { background: rgba(255, 255, 255, 0.08); color: var(--white); }
-/* News page + calendar fixes - paste at the very bottom of src/styles/app.css */
+/* News page + calendar fixes */
 
 /* The app shell wrapper in App.jsx had no rule at all. */
 .app-shell {
@@ -874,9 +825,7 @@ html[data-font-size="large"] { font-size: 18px; }
   min-height: 100vh;
 }
 
-/* News.jsx uses <main className="news-page">, but the only rule for it
-   was .page.news-page (which needs both classes), so the page had no
-   padding and was jammed against the sidebar. */
+/* News.jsx uses <main className="news-page">, but the old rule needed both classes (.page.news-page), so the page had no padding. */
 .news-page {
   max-width: 1200px;
   margin: 0 auto;
@@ -893,11 +842,9 @@ html[data-font-size="large"] { font-size: 18px; }
   color: var(--danger);
 }
 
-/* Month name and arrows were var(--forest) / the link color, which turns
-   dark purple on the dark theme. --ink is always readable. */
+/* Month label/arrows use --ink; --forest turns dark purple on the dark theme. */
 .calendar-month-label { color: var(--ink); }
 .calendar .link-button { color: var(--ink); }
-/* News page + calendar fixes */
 .app-shell {
   display: flex;
   min-height: 100vh;
@@ -991,16 +938,14 @@ html:has(.news-page) {
   scrollbar-color: var(--gold) transparent;
 }
 
-/* Form fields and submit buttons had no text color, so in dark mode they fell
-   back to black (typed text, the date, and the "Create event" label). */
+/* Form fields and buttons had no text color, so dark mode fell back to black. */
 input, textarea, select { color: var(--ink); }
 html[data-theme="dark"] input,
 html[data-theme="dark"] textarea,
 html[data-theme="dark"] select { color-scheme: dark; }
 html[data-theme="dark"] form button[type="submit"] { color: #ffffff; }
 
-/* Stacked fields in a form touched each other, so the next field painted over
-   the focus outline of the one above it. A small gap lets the full outline show. */
+/* A small gap between stacked form fields so the focus outline isn't painted over. */
 .inline-form > input,
 .inline-form > textarea,
 .inline-form > select {
@@ -1016,10 +961,151 @@ html[data-theme="dark"] form button[type="submit"] { color: #ffffff; }
 
 .form-success { color: #4caf7a; font-size: 0.88rem; margin: 0.6em 0 0; }
 
-/* Outline buttons (RSVP, Deny, etc.) used the dark green --forest for text and
-   border, which is almost invisible on the dark theme. */
+/* Outline buttons used dark green --forest, almost invisible on the dark theme. */
 html[data-theme="dark"] button.secondary {
   color: var(--ink);
   border-color: var(--muted);
 }
 html[data-theme="dark"] button.secondary:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* --- Solid News panels + readable text in Dark theme (at the end of the file so it wins) --- */
+.calendar,
+.day-panel,
+.today-card,
+.feed-box {
+  background: var(--white);
+}
+.news-hero {
+  background-color: var(--white);
+  background-image: linear-gradient(135deg, rgba(28, 61, 46, 0.05), rgba(201, 154, 60, 0.08));
+}
+.calendar-cell {
+  color: var(--ink);
+}
+html[data-theme='dark'] button.secondary {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+html[data-theme='dark'] button.secondary:hover {
+  background: rgba(233, 231, 223, 0.1);
+}
+
+/* --- Background photo layer (Settings > Background) ---
+   One div per photo inside .app-background-layer; fixed with a negative z-index so it sits behind the app. */
+.app-background-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.app-background-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.8s ease;
+}
+/* Kept faint so it reads as ambient texture, not a full-strength photo. */
+.app-background-photo.active {
+  opacity: 0.22;
+}
+.bg-photo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7em;
+  margin: 0.7em 0 1em;
+}
+.bg-photo-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0.2em 0 0.7em;
+}
+/* Clickable thumbnail: click to choose the static photo or toggle it in the fade. */
+.bg-photo-thumb {
+  position: relative;
+  width: 100px;
+  height: 66px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.bg-photo-thumb:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(20, 20, 18, 0.22);
+}
+.bg-photo-thumb:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.bg-photo-thumb.selected {
+  box-shadow: 0 0 0 3px var(--gold);
+}
+.bg-photo-thumb-check {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--white);
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+.bg-photo-thumb-remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(30, 30, 28, 0.65);
+  color: var(--white);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.bg-photo-empty {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.85rem;
+  margin: 0.4em 0;
+}
+/* Pill-style button: a <label> around a hidden file input, so clicking it opens the file picker. */
+.bg-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+
+  background: var(--forest);
+  color: var(--white);
+  border-radius: 999px;
+  padding: 0.6em 1.4em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.bg-upload-button:hover {
+  background: var(--forest-light);
+}
+.bg-upload-button.disabled {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+.bg-upload-button input {
+  display: none;
+}

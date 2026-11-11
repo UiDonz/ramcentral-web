@@ -1,26 +1,15 @@
-// Read-only access to the news/calendar data written by the scraper
-// (scripts/scrape-news.js, run on a schedule via GitHub Actions - see
-// .github/workflows/scrape-news.yml). The client never writes to these
-// collections and never calls the summarization API directly - it only
-// ever reads what the scraper already generated and stored.
+// Read-only access to the news/calendar data the scraper writes (scripts/scrape-news.js).
+// The client never writes to these collections.
 import { collection, query, where, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-// schoolNews stores `date` as a human-readable string straight from the
-// scraped headline (e.g. "July 16, 2026"), not a Firestore Timestamp - so a
-// Firestore-side `orderBy('date', ...)` sorts those strings alphabetically
-// ("July" before "September" is right, but "September 9" sorts before
-// "September 15" too, since '1' < '9' as characters). That's what was
-// producing the scrambled-looking order in the feeds. Sorting client-side
-// after actually parsing each string into a real date fixes it properly.
+// schoolNews dates are strings like "July 16, 2026", so Firestore's orderBy sorts them alphabetically;
+// sorting client-side after parsing them fixes the scrambled order.
 function toTimestamp(dateStr) {
 const t = Date.parse(dateStr);
 return Number.isNaN(t) ? 0 : t;
 }
-// category: 'academic' | 'clubs' | 'campus'
-// onError is optional - if the query fails (missing composite index,
-// rules rejection, etc.) onSnapshot's success callback never fires, so
-// without this the UI would just spin forever with no clue why. Pass an
-// onError to surface it instead of only logging to the console.
+// category: 'academic' | 'clubs' | 'campus'. onError is optional; without it a failed query
+// (e.g. a missing index) leaves the UI spinning forever.
 export function listenToNewsByCategory(category, callback, onError) {
 const q = query(collection(db, 'schoolNews'), where('category', '==', category));
 return onSnapshot(
@@ -37,10 +26,7 @@ if (onError) onError(err);
 }
 );
 }
-// Every academic-calendar entry for the whole school year. This collection
-// is small (well under a thousand rows for a year), so the client just
-// listens to all of it and filters by month locally instead of running a
-// separate query per month.
+// Every academic-calendar entry for the school year; small enough to listen to all and filter by month locally.
 export function listenToAcademicCalendar(callback, onError) {
 const q = query(collection(db, 'academicCalendar'), orderBy('date', 'asc'));
 return onSnapshot(

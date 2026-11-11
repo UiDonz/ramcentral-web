@@ -1,6 +1,4 @@
-// Firestore access layer for clubs, memberships, and announcements.
-// Kept separate from components so the data model can change without
-// touching the UI. See /firestore.rules for the matching security rules.
+// Firestore access layer for clubs, memberships and announcements (security rules are in /firestore.rules).
 import {
   collection,
   doc,
@@ -35,12 +33,7 @@ export async function getClub(clubId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-// New clubs start 'pending' instead of going live immediately - Staff
-// reviews and approves them from the Command Center's Action Queue
-// (see approveClubApplication/denyClubApplication below) before they
-// show up in the public directory (listenToClubs only ever returns
-// status == 'active'). The creator can still see and manage their own
-// pending club at its normal /clubs/:id URL while it waits.
+// New clubs start 'pending' until Staff approves them in the Command Center; the creator can still manage their pending club.
 export async function createClub({
   name,
   description,
@@ -86,8 +79,7 @@ export async function getMembership(clubId, uid) {
   return snap.exists() ? snap.data() : null;
 }
 
-// Joins immediately if the club doesn't require approval, otherwise
-// creates a pending membership an officer must approve.
+// Joins immediately, or creates a pending membership if the club requires approval.
 export async function joinClub(clubId, uid, requiresApproval) {
   await setDoc(doc(db, 'clubs', clubId, 'members', uid), {
     uid,
@@ -112,21 +104,12 @@ export async function leaveClub(clubId, uid, wasApproved) {
   }
 }
 
-// Unchanged since Sprint 1/2 - kept for backward compatibility with any
-// existing caller. New code should use changeMemberRole() below, which
-// adds the RBAC check (only a President/Co-President can call it) that
-// this original version never had.
+// Kept for backward compatibility; new code should use changeMemberRole(), which adds the RBAC check.
 export async function promoteToOfficer(clubId, uid, title = 'officer') {
   await updateDoc(doc(db, 'clubs', clubId, 'members', uid), { role: title });
 }
 
-// Promote, demote, or reassign a club member's role. actingMembership
-// is the caller's own membership doc (from getMembership/myMembership
-// in ClubDetail) - canAssignRole checks it's a President or
-// Co-President assigning a role at or below their own rank before this
-// ever reaches Firestore. firestore.rules still has the final say (a
-// non-officer's write is rejected there regardless of what the client
-// sends); this is the fast, friendly check in front of it.
+// Promotes, demotes or reassigns a member's role. canAssignRole checks the caller first; firestore.rules has the final say.
 export async function changeMemberRole(clubId, targetUid, newRole, actingMembership) {
   assertPermission(
     canAssignRole(actingMembership, newRole),
@@ -137,15 +120,7 @@ export async function changeMemberRole(clubId, targetUid, newRole, actingMembers
 
   await updateDoc(doc(db, 'clubs', clubId, 'members', targetUid), { role: newRole });
 
-  // A club only ever has one President. canAssignRole already guarantees
-  // only a sitting President (not a Co-President - see rankOf/canAssignRole
-  // in rbac.js) can ever hand out the Presidency itself, so if that's
-  // what just happened, the outgoing President steps down to Vice
-  // President rather than the club ending up with two members both
-  // marked 'president'. This is the actual leadership transfer: the
-  // outgoing President's president-level permissions (role management,
-  // archiving, etc.) are gone the moment this second write lands, and
-  // only the newly-promoted member has them from here on.
+  // A club has one President: when the Presidency is handed over, the outgoing President steps down to Vice President.
   if (
     newRole === 'president' &&
     actingMembership?.role === 'president' &&
@@ -158,11 +133,7 @@ export async function changeMemberRole(clubId, targetUid, newRole, actingMembers
   }
 }
 
-// "Officer Certification" - a Staff-granted badge marking a student
-// leader as verified, shown next to their name/role in the member
-// list. Independent of the role itself (a brand-new President isn't
-// automatically certified) - only Staff can grant or revoke it, either
-// from a club's own page or the Command Center.
+// "Officer Certification": a Staff-only badge shown next to an officer's name, independent of their role.
 export async function certifyOfficer(clubId, uid, actor) {
   assertPermission(isStaff(actor), '403 Forbidden: only Staff can certify a student leader.');
   await updateDoc(doc(db, 'clubs', clubId, 'members', uid), {
@@ -183,15 +154,9 @@ export async function updateClub(clubId, updates) {
 }
 
 // --- Club lifecycle: archive / approve / deny ---
-// Archiving is a soft delete: the club doc is never removed, so its
-// members, announcements, events, and messages all stay intact and
-// viewable by Staff - it's just hidden from the public directory
-// (listenToClubs only returns status == 'active').
+// Archiving is a soft delete: the club stays in Firestore but is hidden from the public directory.
 
-// Audit-log entries read much better with the club's actual name than
-// its raw Firestore doc ID ("Engineering" vs "foG2WmtcqUMZTEgisnva") -
-// this one extra read is cheap next to the update it's paired with, and
-// falls back to the ID itself if the club doc is somehow already gone.
+// Uses the club's name in audit-log entries instead of its raw doc ID.
 async function getClubNameForAudit(clubId) {
   const snap = await getDoc(doc(db, 'clubs', clubId));
   return snap.exists() ? snap.data().name || clubId : clubId;
@@ -218,10 +183,7 @@ export async function approveClubApplication(clubId, actor) {
   await logAudit({ actor, action: 'approve_club', target: clubName, targetType: 'club' });
 }
 
-// A denied application is filed as 'archived' rather than deleted, so
-// there's still a record of it (and Staff can flip it back to pending/
-// active later if it was denied by mistake) instead of losing the
-// application entirely.
+// A denied application is filed as 'archived' (not deleted) so Staff can restore it later.
 export async function denyClubApplication(clubId, actor) {
   assertPermission(isStaff(actor), '403 Forbidden: only Staff can deny a club application.');
   const clubName = await getClubNameForAudit(clubId);
@@ -229,11 +191,7 @@ export async function denyClubApplication(clubId, actor) {
   await logAudit({ actor, action: 'deny_club', target: clubName, targetType: 'club' });
 }
 
-// listenToClubs (above) only shows status == 'active' for the public
-// directory. Staff's Master Directory needs every club regardless of
-// status, so this is a second, separate listener rather than adding an
-// optional "include all statuses" param that every other caller of
-// listenToClubs would need to remember to not pass.
+// Staff's Master Directory needs every club regardless of status, so this is a separate listener from listenToClubs.
 export function listenToAllClubsForStaff(callback) {
   return onSnapshot(clubsCol, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));

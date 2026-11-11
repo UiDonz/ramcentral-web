@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { listenToClubMessages, sendClubMessage } from '../services/messaging';
 
-// Scoped per-club instant messaging - rendered only for approved
-// members (see ClubDetail.jsx), so a club nobody has messaged in yet
-// costs nothing extra for anyone who isn't a member. Mounting this
-// component's listener never blocks the rest of ClubDetail: it's a
-// plain onSnapshot like every other real-time feature in this app, so
-// the chat panel just shows its own "Loading chat..." state while the
-// page around it is already fully interactive.
+// Per-club instant messaging, rendered only for approved members (see ClubDetail.jsx).
+// Its listener never blocks the rest of the page; it shows its own "Loading chat..." state.
 export default function ClubChat({ clubId, uid, name }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);

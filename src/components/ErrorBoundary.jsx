@@ -1,8 +1,6 @@
 import { Component } from 'react';
 
-// Catches uncaught render errors anywhere below it in the tree so a single
-// broken component can't blank out the whole app. Wraps the entire app in
-// App.jsx once all pages exist (see Issue #27).
+// Catches uncaught render errors below it so one broken component can't blank the whole app (wraps the app in App.jsx).
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);

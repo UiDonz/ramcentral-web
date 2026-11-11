@@ -28,9 +28,8 @@ export function AuthProvider({ children }) {
  });
  return unsubscribe;
  }, []);
- // role is 'student' or 'faculty'. Club officer status lives on the
- // membership doc (clubs/{clubId}/members/{uid}), not here, since a
- // student can be an officer of one club and a plain member of another.
+ // role is 'student' or 'faculty'. Officer status lives on the membership doc (clubs/{clubId}/members/{uid}),
+ // since a student can be an officer of one club and a plain member of another.
  async function signup({ email, password, name, ramId, role }) {
  const cred = await createUserWithEmailAndPassword(auth, email, password);
  const userDoc = {

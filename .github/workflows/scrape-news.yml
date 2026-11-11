@@ -2,7 +2,7 @@ name: Scrape school news and calendar
 
 on:
   schedule:
-    - cron: '17 11 * * *'   # 11:17 UTC daily (~7:17am ET) - offset from the hour on purpose
+    - cron: '23 6 * * *'   # 6:23 UTC daily (~1:23am ET) - early on purpose: GitHub often starts scheduled runs hours late
   workflow_dispatch: {}      # lets anyone trigger a run manually from the Actions tab
 
 jobs:

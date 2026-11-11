@@ -1,39 +1,14 @@
-// Runs on a schedule via .github/workflows/scrape-news.yml (GitHub Actions),
-// never in the browser. It is the only part of this project that holds
-// admin-level Firebase access and an Anthropic API key - both come from
-// GitHub Actions secrets at runtime and are never committed to the repo.
-//
-// What it does, in order:
-// 1. Fetches Farmingdale's public News Room page (headlines) and the JSON
-// feed behind the school's real calendar page - the same one at
-// farmingdale.edu/calendar/, covering academic deadlines, RamCentral/
-// CampusLabs club events, general campus events, and athletics.
-// 2. Parses out headline/date/link (news) and date/title/description/url
-// (calendar events, one entry per event - a day can have several).
-// 3. Categorizes each news item as 'academic' | 'clubs' | 'campus' by
-// keyword match, and each calendar event the same way from its source.
-// 4. Calls Claude to write a short, original-words summary for each news
-// item, and one combined "today at a glance" digest (never stores the
-// original article's full text - see README notes on why, under
-// "Known simplifications").
-// 5. Writes everything to Firestore: schoolNews, academicCalendar, and a
-// single campusDigest doc for today combining both sources.
-//
-// Run locally with: node scripts/scrape-news.js
-// Requires env vars: FIREBASE_SERVICE_ACCOUNT_JSON, ANTHROPIC_API_KEY
+// Runs on a schedule via .github/workflows/scrape-news.yml (GitHub Actions), never in the browser.
+// It is the only part of the project with admin Firebase access and an Anthropic API key; both come from GitHub secrets.
+// Steps: fetch the news page and the school's calendar JSON feed, categorize items (academic | clubs | campus),
+// have Claude write short summaries and a "today at a glance" digest, then write schoolNews, academicCalendar and campusDigest.
+// Run locally: node scripts/scrape-news.js (needs FIREBASE_SERVICE_ACCOUNT_JSON and ANTHROPIC_API_KEY).
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import * as cheerio from 'cheerio';
 import Anthropic from '@anthropic-ai/sdk';
 const NEWS_ROOM_URL = 'https://www.farmingdale.edu/news/feed.shtml?type=news-room';
-// The old ACADEMIC_CALENDAR_URL (.../calendar/academic/index.shtml) was just
-// a static table of a few dozen registrar deadlines - it's why the app's
-// calendar looked so empty. The school's real calendar page (.../calendar/)
-// is a JS-driven "FullCalendar" widget that pulls its events from this same
-// URL with a `fullcalendar=true` query string, returning JSON. It's the same
-// public page the widget itself calls (no auth, no key), and it covers
-// everything: academic deadlines, RamCentral/CampusLabs club events, general
-// FSC events, and athletics games.
+// The school's real calendar page loads its events as JSON from this URL (fullcalendar=true); no auth or key needed.
 const CALENDAR_FEED_URL = 'https://www.farmingdale.edu/calendar/index.shtml';
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
 initializeApp({ credential: cert(serviceAccount) });
@@ -67,13 +42,7 @@ date: dateText ? dateText[0] : null,
 });
 return items.slice(0, 15); // most recent batch only
 }
-// Pulls every event on the school's real calendar in a rolling window
-// (a few days back, so "today" is never missed right at a day boundary,
-// through ~2 months out - roughly what the calendar page itself shows
-// before you'd have to click "next month" a bunch of times). Each event
-// keeps its own date, so - unlike the old one-row-per-day table - more than
-// one thing can land on the same day, which is normal (e.g. a club meeting
-// and a soccer game on the same afternoon).
+// Pulls every calendar event in a rolling window (a few days back through ~2 months out); one entry per event.
 function calendarCategory(source) {
 if (source === 'ramcentral') return 'clubs'; // posted through the school's own club/event platform
 if (source === 'academic') return 'academic';
@@ -90,11 +59,7 @@ const res = await fetch(url);
 const raw = await res.json();
 const events = [];
 for (const ev of raw) {
-// Dates come back with no timezone offset (e.g. "2026-08-31T00:00:00").
-// Pulling the Y/M/D straight out of the string with a regex - rather
-// than handing it to `new Date(...)` and reading the fields back off -
-// sidesteps any chance of the runner's timezone shifting a midnight
-// event onto the wrong day.
+// Reads Y/M/D straight from the string (no timezone offset) so the runner's timezone can't shift an event to the wrong day.
 const m = /^(\d{4})-(\d{2})-(\d{2})T/.exec(ev.start || '');
 if (!m) continue;
 const dateKey = `${Number(m[1])}-${Number(m[2])}-${Number(m[3])}`;
@@ -139,13 +104,8 @@ summary,
 scrapedAt: Timestamp.now(),
 });
 }
-// Calendar events -> academicCalendar. Collection name is a holdover from
-// when this only held registrar deadlines - it now holds every event type,
-// but renaming a Firestore collection every client already reads from
-// isn't worth doing for a name. Doc id is a hash of the day + title (not
-// just the day, like before) since a single day can now hold several
-// events; re-running the scraper re-writes the same id for an unchanged
-// event instead of piling up duplicates.
+// Calendar events -> academicCalendar (name kept from when it only held registrar deadlines).
+// The doc id hashes day + title, so re-runs overwrite instead of duplicating.
 for (const ev of calendarEvents) {
 const docId = Buffer.from(`${ev.date}::${ev.title}`).toString('base64url').slice(0, 300);
 await db.collection('academicCalendar').doc(docId).set({
@@ -157,10 +117,7 @@ category: ev.category,
 time: ev.time,
 });
 }
-// One combined "today" digest, written once per run. Only today's own
-// events go in the prompt now - calendarEvents spans ~2 months, and
-// "today at a glance" should mean today, not everything coming up this
-// fall.
+// One combined "today" digest per run, built only from today's events.
 const today = new Date();
 const todayKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 const todaysEvents = calendarEvents.filter((ev) => ev.date === todayKey);

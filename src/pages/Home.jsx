@@ -20,8 +20,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!currentUser) return;
-    // Collection group query across every club's "members" subcollection,
-    // filtered to this user, so we can badge "my clubs" without denormalizing.
+    // Collection group query across every club's "members" subcollection, so "my clubs" can be badged without denormalizing.
     const q = query(
       collectionGroup(db, 'members'),
       where('uid', '==', currentUser.uid),
@@ -41,9 +40,7 @@ export default function Home() {
   const myClubs = filtered.filter((c) => myClubIds.has(c.id));
   const otherClubs = filtered.filter((c) => !myClubIds.has(c.id));
 
-  // Sections keyed the same way as settings.homeLayout so a user's saved order
-  // is just "map this array, look up each key here." The content and
-  // logic of each section is unchanged from before this feature existed
+  // Sections keyed like settings.homeLayout, so a saved order is just "map this array, look up each key here."
   const sections = {
     myClubs: myClubs.length > 0 && (
       <section key="myClubs">
