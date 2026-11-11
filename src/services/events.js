@@ -4,6 +4,7 @@ import {
   addDoc,
   setDoc,
   deleteDoc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -14,8 +15,16 @@ import { db } from '../firebase';
 
 const eventsCol = collection(db, 'events');
 
+// Midnight at the start of today. Listing events from here (not from this exact
+// moment) keeps an event made for "now" or earlier today from vanishing at once.
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 export function listenToUpcomingEvents(callback) {
-  const q = query(eventsCol, where('dateTime', '>=', new Date()), orderBy('dateTime', 'asc'));
+  const q = query(eventsCol, where('dateTime', '>=', startOfToday()), orderBy('dateTime', 'asc'));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
@@ -24,7 +33,7 @@ export function listenToClubEvents(clubId, callback, onError) {
   const q = query(
     eventsCol,
     where('clubId', '==', clubId),
-    where('dateTime', '>=', new Date()),
+    where('dateTime', '>=', startOfToday()),
     orderBy('dateTime', 'asc')
   );
   return onSnapshot(
@@ -50,6 +59,16 @@ export async function createEvent({ clubId, title, description, location, dateTi
     attendeeCount: 0,
     createdBy,
     createdAt: serverTimestamp()
+  });
+}
+
+// Edits an existing event; only the fields the edit form shows can change.
+export async function updateEvent(eventId, { title, description, location, dateTime }) {
+  await updateDoc(doc(db, 'events', eventId), {
+    title,
+    description: description || '',
+    location: location || '',
+    dateTime: new Date(dateTime)
   });
 }
 

@@ -21,7 +21,8 @@ import {
   listenToAnnouncements,
   postAnnouncement
 } from '../services/clubs';
-import { listenToClubEvents, createEvent, rsvpToEvent, cancelEvent } from '../services/events';
+import { listenToClubEvents, createEvent, updateEvent, rsvpToEvent, cancelEvent } from '../services/events';
+import DateTimePicker from '../components/DateTimePicker';
 import {
   isClubOfficerRole,
   canManageRoles,
@@ -43,6 +44,13 @@ import {
 } from '../services/admin';
 import ClubChat from '../components/ClubChat';
 
+// Turns a saved event time into the 'YYYY-MM-DDTHH:mm' text the date picker uses.
+function toDateTimeValue(ts) {
+  const d = new Date(ts && ts.seconds ? ts.seconds * 1000 : ts);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function ClubDetail() {
   const { clubId } = useParams();
   const { currentUser, profile } = useAuth();
@@ -53,6 +61,7 @@ export default function ClubDetail() {
   const [events, setEvents] = useState([]);
   const [announcementForm, setAnnouncementForm] = useState({ title: '', body: '' });
   const [eventForm, setEventForm] = useState({ title: '', description: '', location: '', dateTime: '' });
+  const [editingEvent, setEditingEvent] = useState(null); // { id, title, description, location, dateTime }
   const [editingInfo, setEditingInfo] = useState(false);
   const [infoForm, setInfoForm] = useState(null);
   const [memberNames, setMemberNames] = useState({});
@@ -193,6 +202,33 @@ export default function ClubDetail() {
       setEventMessage({ type: 'ok', text: 'Event created.' });
     } catch (err) {
       setEventMessage({ type: 'error', text: `Couldn't create the event: ${err.message}` });
+    }
+  }
+
+  function startEditEvent(ev) {
+    setEventMessage(null);
+    setEditingEvent({
+      id: ev.id,
+      title: ev.title || '',
+      description: ev.description || '',
+      location: ev.location || '',
+      dateTime: toDateTimeValue(ev.dateTime)
+    });
+  }
+
+  async function handleSaveEvent(e) {
+    e.preventDefault();
+    if (!editingEvent.title || !editingEvent.dateTime) {
+      setEventMessage({ type: 'error', text: 'Please enter an event title and a date and time.' });
+      return;
+    }
+    try {
+      const { id, ...fields } = editingEvent;
+      await updateEvent(id, fields);
+      setEditingEvent(null);
+      setEventMessage({ type: 'ok', text: 'Event updated.' });
+    } catch (err) {
+      setEventMessage({ type: 'error', text: `Couldn't update the event: ${err.message}` });
     }
   }
 
@@ -371,10 +407,9 @@ export default function ClubDetail() {
               value={eventForm.title}
               onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
             />
-            <input
-              type="datetime-local"
+            <DateTimePicker
               value={eventForm.dateTime}
-              onChange={(e) => setEventForm((f) => ({ ...f, dateTime: e.target.value }))}
+              onChange={(value) => setEventForm((f) => ({ ...f, dateTime: value }))}
             />
             <input
               placeholder="Location"
@@ -398,7 +433,36 @@ export default function ClubDetail() {
           <p className="form-error">Couldn't load this club's events ({eventsLoadError})</p>
         )}
         {!eventsLoadError && events.length === 0 && <p className="empty-state">No upcoming events.</p>}
-        {events.map((ev) => (
+        {events.map((ev) =>
+          editingEvent && editingEvent.id === ev.id ? (
+            <form key={ev.id} onSubmit={handleSaveEvent} className="inline-form">
+              <input
+                placeholder="Event title"
+                value={editingEvent.title}
+                onChange={(e) => setEditingEvent((f) => ({ ...f, title: e.target.value }))}
+              />
+              <DateTimePicker
+                value={editingEvent.dateTime}
+                onChange={(value) => setEditingEvent((f) => ({ ...f, dateTime: value }))}
+              />
+              <input
+                placeholder="Location"
+                value={editingEvent.location}
+                onChange={(e) => setEditingEvent((f) => ({ ...f, location: e.target.value }))}
+              />
+              <textarea
+                placeholder="Description"
+                value={editingEvent.description}
+                onChange={(e) => setEditingEvent((f) => ({ ...f, description: e.target.value }))}
+              />
+              <div className="form-actions">
+                <button type="submit">Save changes</button>
+                <button type="button" className="secondary" onClick={() => setEditingEvent(null)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
           <div key={ev.id} className="event-card">
             <h3>{ev.title}</h3>
             <p>{new Date(ev.dateTime.seconds ? ev.dateTime.seconds * 1000 : ev.dateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
@@ -406,13 +470,19 @@ export default function ClubDetail() {
             {isApprovedMember && (
               <button className="secondary" onClick={() => rsvpToEvent(ev.id, currentUser.uid)}>RSVP</button>
             )}
+            {isOfficer && (
+              <button className="secondary" style={{ marginLeft: '0.6em' }} onClick={() => startEditEvent(ev)}>
+                Edit
+              </button>
+            )}
             {canCancelEvents && (
               <button className="secondary" style={{ marginLeft: '0.6em' }} onClick={() => handleCancelEvent(ev)}>
                 Cancel event
               </button>
             )}
           </div>
-        ))}
+          )
+        )}
       </section>
 
       <section className="detail-section">
@@ -562,13 +632,13 @@ export default function ClubDetail() {
                 required
               />
             </label>
-            <label>Date &amp; time
-              <input
-                type="datetime-local"
+            <div className="dtp-field-group">
+              <span>Date &amp; time</span>
+              <DateTimePicker
                 value={roomForm.dateTime}
-                onChange={(e) => setRoomForm((f) => ({ ...f, dateTime: e.target.value }))}
+                onChange={(value) => setRoomForm((f) => ({ ...f, dateTime: value }))}
               />
-            </label>
+            </div>
             <label>Purpose
               <input
                 placeholder="e.g. General meeting"
