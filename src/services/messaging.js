@@ -1,22 +1,12 @@
-// Firestore-backed instant messaging, scoped per club
-// (clubs/{clubId}/messages). Deliberately minimal - a flat, append-only
-// list ordered by time, no threads/reactions/edits/typing indicators -
-// this is a scaffold the team can build on, not a finished chat
-// product. A club's messages subcollection is created implicitly the
-// moment anyone sends a first message, so nothing needs to be
-// provisioned up front when a club is created.
+// Firestore-backed instant messaging per club (clubs/{clubId}/messages). Deliberately minimal: a flat, append-only
+// list ordered by time, with no threads, reactions, edits or typing indicators. The subcollection is created on first send.
 import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
-// Most-recent N messages - enough for a useful scrollback without
-// pulling a club's entire message history into memory on every visit.
+// Most recent N messages: enough scrollback without loading a club's whole history.
 const MESSAGE_PAGE_SIZE = 200;
 
-// A plain onSnapshot, exactly like every other real-time listener in
-// this app (listenToMembers, listenToAnnouncements, listenToClubEvents)
-// - mounting it never blocks the rest of ClubDetail from rendering.
-// ClubChat.jsx shows its own "Loading chat..." state until the first
-// snapshot arrives while the rest of the page is already interactive.
+// A plain onSnapshot like the other listeners; ClubChat shows its own loading state until the first snapshot arrives.
 export function listenToClubMessages(clubId, callback, onError) {
   const q = query(
     collection(db, 'clubs', clubId, 'messages'),

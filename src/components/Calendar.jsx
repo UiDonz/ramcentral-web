@@ -1,18 +1,13 @@
 import { useState, useMemo } from 'react';
-// Same category -> color mapping used for news items elsewhere on the News
-// page, so a glance at the calendar and a glance at the feeds below it read
-// as one consistent system rather than two different color languages.
+// Same category -> color mapping as the News page, so the calendar and the feeds read as one system.
 const CATEGORY_COLORS = {
 academic: '#0c447c',
 clubs: '#72243e',
 campus: '#27500a',
 };
 const DEFAULT_DOT_COLOR = '#c99a3c';
-// events: array of { date: 'YYYY-M-D', title, description, category? }
-// A day can have more than one event (e.g. a governance meeting AND an
-// add/drop deadline on the same date), so eventsByKey groups into arrays
-// rather than overwriting - this used to silently drop same-day events.
-// onDayClick(dateKey, dateLabel, eventsForDay: array, possibly empty)
+// events: array of { date: 'YYYY-M-D', title, description, category? }. A day can have several events,
+// so eventsByKey groups them into arrays. onDayClick(dateKey, dateLabel, eventsForDay).
 export default function Calendar({ events, onDayClick }) {
 const [current, setCurrent] = useState(() => new Date());
 const today = useMemo(() => new Date(), []);
@@ -66,9 +61,7 @@ const key = `${year}-${month + 1}-${cell.n}`;
 const isToday = year === today.getFullYear() && month === today.getMonth() && cell.n ===
 today.getDate();
 const dayEvents = eventsByKey[key] || [];
-// One dot per distinct category present that day (capped at 3 so
-// a busy day doesn't overflow the cell), rather than a single
-// generic "something's happening" dot.
+// One dot per distinct category that day, capped at 3 so a busy day doesn't overflow the cell.
 const dotColors = [...new Set(dayEvents.map((ev) => ev.category).filter(Boolean))]
 .map((cat) => CATEGORY_COLORS[cat] || DEFAULT_DOT_COLOR)
 .slice(0, 3);

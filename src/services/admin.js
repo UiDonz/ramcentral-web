@@ -28,9 +28,7 @@ import {
   canManageLogistics
 } from './rbac';
 
-// --------------------------------------------------
-// AUDIT TRAIL
-// --------------------------------------------------
+// --- AUDIT TRAIL ---
 
 export async function logAudit({
   actor,
@@ -67,9 +65,7 @@ export function listenToAuditLog(callback, count = 50) {
   });
 }
 
-// --------------------------------------------------
-// BUDGET REQUESTS
-// --------------------------------------------------
+// --- BUDGET REQUESTS ---
 
 export async function requestBudget({
   clubId,
@@ -192,9 +188,7 @@ export async function decideBudgetRequest(
   });
 }
 
-// --------------------------------------------------
-// PER-CLUB EXPENSE LEDGER
-// --------------------------------------------------
+// --- PER-CLUB EXPENSE LEDGER ---
 
 export async function logClubExpense(
   clubId,
@@ -251,9 +245,7 @@ export function listenToClubExpenses(clubId, callback) {
   });
 }
 
-// --------------------------------------------------
-// ROOM BOOKINGS
-// --------------------------------------------------
+// --- ROOM BOOKINGS ---
 
 export async function requestRoomBooking({
   clubId,
@@ -354,9 +346,7 @@ export async function decideRoomBooking(
   });
 }
 
-// --------------------------------------------------
-// CAMPUS BUDGET
-// --------------------------------------------------
+// --- CAMPUS BUDGET ---
 
 const DEFAULT_BUDGET = {
   total: 0,
@@ -419,9 +409,7 @@ export async function setCampusBudget(total, actor) {
   });
 }
 
-// --------------------------------------------------
-// QUICK STATS
-// --------------------------------------------------
+// --- QUICK STATS ---
 
 export async function getQuickStats() {
   const [

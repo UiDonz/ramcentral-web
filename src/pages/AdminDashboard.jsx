@@ -23,7 +23,6 @@ import {
   getQuickStats
 } from '../services/admin';
 
-// Reusable statistics tile
 function StatTile({ label, value }) {
   return (
     <div className="stat-tile">
@@ -33,7 +32,6 @@ function StatTile({ label, value }) {
   );
 }
 
-// Format timestamps
 function formatWhen(ts) {
   if (!ts) return '...';
 
@@ -48,7 +46,6 @@ function formatWhen(ts) {
       });
 }
 
-// Staff-only Admin Dashboard
 export default function AdminDashboard() {
   const { profile } = useAuth();
 
@@ -58,7 +55,6 @@ export default function AdminDashboard() {
     role: profile?.role
   };
 
-  // State
   const [allClubs, setAllClubs] = useState([]);
   const [pendingClubs, setPendingClubs] = useState([]);
   const [pendingBudget, setPendingBudget] = useState([]);
@@ -74,7 +70,6 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
   const [budgetInput, setBudgetInput] = useState('');
 
-  // Listen for dashboard data
   useEffect(() => listenToAllClubsForStaff(setAllClubs), []);
   useEffect(() => listenToPendingClubs(setPendingClubs), []);
   useEffect(() => listenToPendingBudgetRequests(setPendingBudget), []);
@@ -82,14 +77,12 @@ export default function AdminDashboard() {
   useEffect(() => listenToAuditLog(setAuditLog), []);
   useEffect(() => listenToCampusBudget(setBudget), []);
 
-  // Load quick statistics
   useEffect(() => {
     getQuickStats()
       .then(setStats)
       .catch((err) => setError(err.message));
   }, [allClubs.length]);
 
-  // Handle administrative actions
   async function handle(fn, ...args) {
     setError(null);
 
@@ -100,7 +93,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Update campus budget
   async function handleSetBudget(e) {
     e.preventDefault();
 

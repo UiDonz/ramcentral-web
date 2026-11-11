@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-// Shared body-scroll lock: opening a zoom card - from anywhere in the app -
-// disables the page's own scrolling while it's open (standard modal
-// behavior, and it also doubles as the signal the News page's auto-scroll
-// checks before nudging itself). A counter, not a boolean, so it still
-// works correctly if a second card somehow opens before the first fully
-// closes.
+// Shared body-scroll lock while any zoom card is open (News auto-scroll also checks it). A counter, so overlapping cards work.
 
 let lockCount = 0;
 function lockPageScroll() {
@@ -19,25 +14,10 @@ if (lockCount === 0) document.body.classList.remove('zoom-locked');
 }
 const TRANSITION_MS = 320;
 
-// A "Medium-style" shared-element zoom. Clicking the compact `preview` grows
-// it, from its exact spot on the page, into a large panel centered on the
-// screen - then shrinks it back down to exactly where it started when
-// dismissed, instead of a modal that just appears/disappears out of nowhere.
-//
-// How the FLIP trick works here: on open, we read the source element's
-// on-screen position (getBoundingClientRect) and render the portal panel
-// pinned to those exact coordinates first (via inline style, position:
-// fixed) - then, one frame later, swap to the centered "open" layout via a
-// CSS class. Because the browser actually painted the first position
-// before the swap, it has something concrete to transition from. Closing
-// does the same thing in reverse: re-read the source's current position
-// (it may have scrolled since opening) and animate back to it.
-//
-// Dismiss by: the close (x) button, clicking the dimmed backdrop, pressing
-// Escape, or clicking the opened panel itself a second time (this used to
-// close on hover-off instead, but that meant the panel could slam shut
-// mid-open if your cursor wasn't already sitting where the panel would end
-// up - a plain click toggle doesn't have that problem).
+// Medium-style shared-element zoom: the preview grows from its exact spot into a centered panel and shrinks back on close.
+// FLIP trick: render at the source's coordinates first, then swap to the centered class a frame later,
+// so the browser has a painted position to animate from (closing does the reverse).
+// Close with the x button, the backdrop, Escape, or a second click on the panel.
 
 export default function ZoomCard({ className = '', preview, expanded, ariaLabel, onOpenChange }) {
 const sourceRef = useRef(null);
@@ -69,8 +49,7 @@ window.addEventListener('keydown', onKeyDown);
 return () => window.removeEventListener('keydown', onKeyDown);
 // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [phase]);
-// Safety net so navigating away (or any unmount) while a card happens to
-// be open never leaves the page permanently scroll-locked.
+// Safety net: never leave the page scroll-locked if the card unmounts while open.
 useEffect(() => {
 return () => {
 if (phase === 'open' || phase === 'opening') unlockPageScroll();

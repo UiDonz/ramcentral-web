@@ -90,6 +90,12 @@ allow read: if isSignedIn();
 allow create: if isSelf(uid);
 allow update: if isSelf(uid);
 allow delete: if false;
+
+// --- users/{uid}/backgroundImages/{imageId} ---
+// Each uploaded background photo is its own small doc; only the owner can read or write it.
+match /backgroundImages/{imageId} {
+allow read, write: if isSelf(uid);
+}
 }
 // --- clubs/{clubId} ---
 match /clubs/{clubId} {

@@ -92,10 +92,7 @@ export default function ClubDetail() {
     getMembership(clubId, currentUser.uid).then(setMyMembership);
   }, [clubId, currentUser, members]);
 
-  // Members subcollection only stores uid + role, so this resolves
-  // display names from the top-level users collection. Fine at club
-  // scale; if member lists grow large, denormalize name onto the
-  // membership doc when it's created instead.
+  // Resolves display names from the users collection (members only store uid + role); fine at club scale.
   useEffect(() => {
     const missing = members.filter((m) => !(m.uid in memberNames));
     if (missing.length === 0) return;
@@ -105,35 +102,21 @@ export default function ClubDetail() {
     });
   }, [members]);
 
-  // isClubOfficerRole replaces the old `['president', 'officer'].includes(role)`
-  // check - it's true for every non-member role (president, co_president,
-  // vice_president, secretary, treasurer, and the legacy generic
-  // 'officer'), so existing clubs created before this role hierarchy
-  // existed keep working exactly as before.
+  // isClubOfficerRole is true for every non-member role, including the legacy generic 'officer'.
   const isOfficer = isClubOfficerRole(myMembership?.role);
   const isApprovedMember = myMembership?.status === 'approved';
   const isStaffUser = isStaff(profile);
   const pendingMembers = members.filter((m) => m.status === 'pending');
 
-  // Club Finances panel (budget received/spent, request history, expense
-  // log) is viewable by Treasurer/President/Co-President - see
-  // canViewClubFinances in services/rbac.js. Actually filing a request or
-  // logging an expense is narrower still (canManageClubFinances -
-  // Treasurer only): the President/Co-President see the panel for
-  // oversight/sign-off but the two forms below only render for the
-  // Treasurer, matching "President cannot unilaterally disburse funds
-  // without Treasurer verification."
+  // Club Finances panel: Treasurer, President and Co-President can view it (canViewClubFinances);
+  // only the Treasurer can file requests or log expenses (canManageClubFinances).
   const canFinance = canViewClubFinances(myMembership?.role);
   const canFinanceManage = canManageClubFinances(myMembership?.role);
 
-  // Room & Logistics panel - President/Co-President/Vice President only
-  // (canManageLogistics); Treasurer and Secretary don't get this one.
+  // Room & Logistics panel: President, Co-President and Vice President only.
   const canLogistics = canManageLogistics(myMembership?.role);
 
-  // Only subscribe once we know the caller actually has the relevant
-  // access - firestore.rules would reject these reads for anyone else,
-  // so there's no point opening (and erroring) a listener nobody's
-  // allowed to read.
+  // Only subscribe when the user has access; firestore.rules would reject the read anyway.
   useEffect(() => {
     if (!canFinance) {
       setBudgetRequests([]);
@@ -267,10 +250,7 @@ export default function ClubDetail() {
   }
 
   function handleCertifyToggle(member) {
-    // role must travel with the actor - isStaff(actor) checks
-    // actor.role === 'faculty', so leaving it off (as an earlier pass
-    // through this file did) makes every Staff check fail silently,
-    // 403-ing even a genuine faculty account.
+    // The actor must include role: isStaff() checks actor.role === 'faculty'.
     const actor = { uid: currentUser.uid, name: profile?.name, role: profile?.role };
     runGuarded(member.certified ? revokeCertification : certifyOfficer, clubId, member.uid, actor);
   }
@@ -281,9 +261,7 @@ export default function ClubDetail() {
   return (
     <div className="page">
 
-      {/* Visible to everyone so a club's own officers understand why it
-         isn't showing up in the public directory yet - the action
-         buttons inside are Staff-only. */}
+      {/* Shown to everyone so officers know why the club isn't public yet; the action buttons are Staff-only. */}
       {club.status !== 'active' && (
         <div
           className="day-panel-empty"
@@ -457,10 +435,7 @@ export default function ClubDetail() {
             {m.certified && (
               <span className="certified-badge" title="Certified student leader">&#10003; Certified</span>
             )}
-            {/* Only a President/Co-President gets the reassignment
-               dropdown, and never for their own row - see
-               canManageRoles/canAssignRole in services/rbac.js for the
-               exact hierarchy this enforces. */}
+            {/* Only a President/Co-President gets the role dropdown, never on their own row. */}
             {canManageRoles(myMembership) && m.uid !== currentUser.uid && (
               <select
                 className="role-select"
@@ -482,12 +457,7 @@ export default function ClubDetail() {
         ))}
       </section>
 
-      {/* Club Finances - only rendered for a Treasurer, President, or
-         Co-President (canFinance above); every other role, including a
-         Vice President or Secretary, never sees this section at all -
-         it's not just visually hidden, the underlying Firestore reads
-         are rejected for them too (see isClubFinanceOfficer in
-         firestore.rules). */}
+      {/* Club Finances: only the Treasurer, President and Co-President see it; other roles' reads are also rejected in firestore.rules. */}
 
       {canFinance && (
         <section className="detail-section">
@@ -509,9 +479,7 @@ export default function ClubDetail() {
             </div>
           </div>
           <h3>Request funds from Staff</h3>
-          {/* Filing a request is Treasurer-only (canFinanceManage) - the
-             President/Co-President see this whole section for oversight
-             but the form itself only renders for the Treasurer. */}
+          {/* Only the Treasurer sees the request form; the President/Co-President get the panel for oversight. */}
           {canFinanceManage ? (
             <form onSubmit={handleRequestBudget} className="inline-form">
               <label>Amount ($)
@@ -580,10 +548,7 @@ export default function ClubDetail() {
         </section>
       )}
 
-      {/* Room & Logistics - President/Co-President/Vice President only
-         (canLogistics); Treasurer and Secretary don't get this section,
-         matching "Treasurer cannot book rooms" and "Secretary cannot
-         submit room reservation contracts independently." */}
+      {/* Room & Logistics: President, Co-President and Vice President only. */}
 
       {canLogistics && (
         <section className="detail-section">

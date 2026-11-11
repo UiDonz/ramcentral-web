@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import StaffRoute from './components/StaffRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
+import BackgroundLayer from './components/BackgroundLayer';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
@@ -33,7 +34,10 @@ function AppShell() {
     );
   }
   return (
-    <div className="app-shell">
+    <>
+      {/* Fixed behind the app; renders nothing unless the user turned on a background in Settings. */}
+      <BackgroundLayer />
+      <div className="app-shell">
       <Sidebar />
       <div className="app-main">
         <Routes>
@@ -53,6 +57,7 @@ function AppShell() {
         </Routes>
       </div>
     </div>
+    </>
   );
 }
 export default function App() {

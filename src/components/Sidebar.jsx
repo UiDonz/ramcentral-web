@@ -31,11 +31,8 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Thin, always-present strip along the left edge with a subtle gold
-         tab - hovering it (or the sidebar itself) slides the full sidebar
-         into view via CSS (see .sidebar-hover-zone / .sidebar in app.css).
-         focus-within on .sidebar keeps it reachable by keyboard tabbing
-         even without a mouse. */}
+      {/* Thin strip on the left edge; hovering it (or the sidebar) slides the sidebar in via CSS.
+           focus-within keeps it reachable by keyboard. */}
       <div className="sidebar-hover-zone" aria-hidden="true" />
       <nav className="sidebar" aria-label="Main navigation">
         <NavLink to="/" className="sidebar-brand" aria-label="NewRamCentral home">R</NavLink>
@@ -52,10 +49,7 @@ export default function Sidebar() {
               <span className="sidebar-label">{label}</span>
             </NavLink>
           ))}
-          {/* Command Center - only faculty (Staff/Super Admin) accounts
-             see this link at all, matching the /admin route's own
-             StaffRoute guard in App.jsx. A student who somehow guessed
-             the URL would still be bounced back to / by that guard. */}
+          {/* Command Center link: faculty (Staff/Super Admin) only, matching the StaffRoute guard on /admin. */}
           {isStaff(profile) && (
             <NavLink
               to="/admin"
