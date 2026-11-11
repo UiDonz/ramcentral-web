@@ -932,8 +932,8 @@ html[data-font-size="large"] { font-size: 18px; }
 .news-hero + .news-hero { margin-top: 1.2em; }
 .news-hero > .news-bottom-row { margin-top: 0; }
 
-/* Thin gold page scroll bar, only while the News page is showing */
-html:has(.news-page) {
+/* Thin accent-colored page scroll bar on every page (matches the News page) */
+html {
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
 }
@@ -1109,3 +1109,87 @@ html[data-theme='dark'] button.secondary:hover {
 .bg-upload-button input {
   display: none;
 }
+
+/* --- Date and time picker (components/DateTimePicker.jsx) --- */
+.dtp { position: relative; }
+.inline-form > .dtp { margin-bottom: 0.7em; }
+.dtp-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-bottom: 0.9em;
+}
+.dtp-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em;
+  width: 100%;
+  padding: 0.55em 0.7em;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+.dtp-field:hover { background: var(--white); border-color: var(--gold); }
+.dtp-field svg { flex: none; color: var(--muted); }
+.dtp-placeholder { color: var(--muted); }
+.dtp-pop {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(320px, 100%);
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(20, 30, 24, 0.22);
+  padding: 14px;
+  font-family: 'Work Sans', sans-serif;
+}
+.dtp-pop button {
+  background: transparent;
+  color: var(--ink);
+  border: none;
+  border-radius: 6px;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+.dtp-pop button:hover { background: color-mix(in srgb, var(--ink) 12%, transparent); }
+.dtp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dtp-nav { display: flex; gap: 4px; }
+.dtp-nav button { width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; line-height: 1; }
+.dtp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.dtp-dow { font-size: 0.72rem; color: var(--muted); padding: 4px 0; }
+.dtp-pop button.dtp-day { aspect-ratio: 1; border-radius: 50%; font-size: 0.88rem; }
+.dtp-pop button.dtp-out { color: var(--muted); opacity: 0.5; }
+.dtp-pop button.dtp-today { box-shadow: inset 0 0 0 1.5px var(--gold); }
+.dtp-pop button.dtp-sel,
+.dtp-pop button.dtp-sel:hover { background: var(--forest); color: var(--white); font-weight: 600; }
+.dtp-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.dtp-time select { width: auto; padding: 0.35em 0.45em; color: var(--ink); }
+.dtp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.dtp-pop button.dtp-chip { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 0.8rem; }
+.dtp-foot { display: flex; justify-content: space-between; margin-top: 12px; }
+.dtp-pop button.dtp-link { color: var(--forest); font-weight: 600; font-size: 0.9rem; padding: 4px 6px; }
+/* Dark theme: --forest stays dark, so links and the selected day use the readable colors instead. */
+html[data-theme="dark"] .dtp-pop button.dtp-link { color: var(--ink); }
+html[data-theme="dark"] .dtp-pop button.dtp-sel,
+html[data-theme="dark"] .dtp-pop button.dtp-sel:hover { background: var(--gold); color: var(--cream); }
