@@ -1213,3 +1213,21 @@ html[data-theme="dark"] .dtp-pop button.dtp-sel:hover { background: var(--gold);
 .past-event-card p { margin: 0; }
 .past-event-date { font-weight: 500; color: var(--ink); }
 .past-event-location { font-size: 0.85rem; color: var(--muted); }
+
+
+
+/* --- Sprint 6: Club Calendar page (ClubCalendar.jsx) --- */
+.club-calendar-layout {
+ display: grid;
+ grid-template-columns: minmax(300px, 420px) 1fr;
+ gap: 1.5em;
+ align-items: start;
+ margin-top: 1.2em;
+}
+@media (max-width: 760px) {
+ .club-calendar-layout { grid-template-columns: 1fr; }
+}
+.club-day-panel { min-height: 160px; }
+.club-day-event { padding: 0.6em 0; border-bottom: 1px solid var(--border); }
+.club-day-event:last-child { border-bottom: none; }
+.club-day-event-meta { font-size: 0.8rem; color: var(--muted); margin: 0.1em 0 0.2em; }
