@@ -17,6 +17,14 @@
  ]
  },
  {
+ "collectionGroup": "events",
+ "queryScope": "COLLECTION",
+ "fields": [
+ { "fieldPath": "clubId", "order": "ASCENDING" },
+ { "fieldPath": "dateTime", "order": "DESCENDING" }
+ ]
+ },
+ {
  "collectionGroup": "members",
  "queryScope": "COLLECTION_GROUP",
  "fields": [

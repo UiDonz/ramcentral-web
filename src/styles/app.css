@@ -1193,3 +1193,23 @@ html[data-theme='dark'] button.secondary:hover {
 html[data-theme="dark"] .dtp-pop button.dtp-link { color: var(--ink); }
 html[data-theme="dark"] .dtp-pop button.dtp-sel,
 html[data-theme="dark"] .dtp-pop button.dtp-sel:hover { background: var(--gold); color: var(--cream); }
+
+/* --- Sprint 6: Past events grouped by semester (PastEvents.jsx) --- */
+.past-semester { margin-bottom: 1.2em; }
+.past-semester-title {
+ display: flex;
+ align-items: baseline;
+ gap: 0.7em;
+ margin: 0 0 0.5em;
+ color: var(--ink);
+}
+.past-semester-ago {
+ font-family: 'Work Sans', sans-serif;
+ font-size: 0.78rem;
+ font-weight: 500;
+ color: var(--muted);
+}
+.past-event-card h4 { margin: 0 0 0.2em; color: var(--ink); }
+.past-event-card p { margin: 0; }
+.past-event-date { font-weight: 500; color: var(--ink); }
+.past-event-location { font-size: 0.85rem; color: var(--muted); }

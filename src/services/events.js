@@ -8,6 +8,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
   onSnapshot
 } from 'firebase/firestore';
@@ -47,10 +48,35 @@ export function listenToClubEvents(clubId, callback, onError) {
     }
   );
 }
-
+// Events that already happened, newest first - powers the "Past events"
+// section on a club page (grouped by semester, see PastEvents.jsx).
+// Same equality-filter + range-filter shape as listenToClubEvents above,
+// so it needs its own composite index (clubId ASC, dateTime DESC - added
+// to firestore.indexes.json in this issue). Capped at 100 so a club with
+// years of history doesn't pull everything on every visit.
+// "Past" means before today, because today's events still show under upcoming.
+export function listenToPastClubEvents(clubId, callback, onError) {
+ const q = query(
+ eventsCol,
+ where('clubId', '==', clubId),
+ where('dateTime', '<', startOfToday()),
+ orderBy('dateTime', 'desc'),
+ limit(100)
+ );
+ return onSnapshot(
+ q,
+ (snap) => {
+ callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+ },
+ (err) => {
+ console.error('[events] listenToPastClubEvents failed:', err);
+ if (onError) onError(err);
+ }
+ );
+}
 export async function createEvent({ clubId, title, description, location, dateTime, createdBy }) {
-  await addDoc(eventsCol, {
-    clubId,
+ await addDoc(eventsCol, {
+  clubId,
     title,
     description: description || '',
     location: location || '',
