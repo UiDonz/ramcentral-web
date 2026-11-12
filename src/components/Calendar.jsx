@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 // Same category -> color mapping as the News page, so the calendar and the feeds read as one system.
 const CATEGORY_COLORS = {
 academic: '#0c447c',
@@ -8,7 +8,9 @@ campus: '#27500a',
 const DEFAULT_DOT_COLOR = '#c99a3c';
 // events: array of { date: 'YYYY-M-D', title, description, category? }. A day can have several events,
 // so eventsByKey groups them into arrays. onDayClick(dateKey, dateLabel, eventsForDay).
-export default function Calendar({ events, onDayClick }) {
+// onMonthChange(year, monthIndex) is optional: it runs on mount and whenever the visible month changes,
+// so the Club Calendar can load one month at a time. The News page doesn't pass it.
+export default function Calendar({ events, onDayClick, onMonthChange }) {
 const [current, setCurrent] = useState(() => new Date());
 const today = useMemo(() => new Date(), []);
 const eventsByKey = useMemo(() => {
@@ -21,10 +23,13 @@ return map;
 }, [events]);
 const year = current.getFullYear();
 const month = current.getMonth();
-const monthLabel = current.toLocaleString('default', { month: 'long', year: 'numeric' });
-const firstWeekday = new Date(year, month, 1).getDay();
-const daysInMonth = new Date(year, month + 1, 0).getDate();
-const daysInPrevMonth = new Date(year, month, 0).getDate();
+ const monthLabel = current.toLocaleString('default', { month: 'long', year: 'numeric' });
+ useEffect(() => {
+ if (onMonthChange) onMonthChange(year, month);
+ }, [year, month]);
+ const firstWeekday = new Date(year, month, 1).getDay();
+ const daysInMonth = new Date(year, month + 1, 0).getDate();
+ const daysInPrevMonth = new Date(year, month, 0).getDate();
 const cells = [];
 for (let i = firstWeekday - 1; i >= 0; i--) cells.push({ n: daysInPrevMonth - i, muted: true });
 for (let d = 1; d <= daysInMonth; d++) cells.push({ n: d, muted: false });

@@ -1,16 +1,16 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, CalendarDays, Newspaper, Plus, LogOut, ShieldCheck, Settings as SettingsIcon } from 'lucide-react';
+import { Users, CalendarDays, CalendarRange, Newspaper, Plus, LogOut, ShieldCheck, Settings as SettingsIcon }
+ from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isStaff } from '../services/rbac';
-
 const LINKS = [
   { to: '/', label: 'Clubs', Icon: Users, end: true },
   { to: '/events', label: 'Events', Icon: CalendarDays },
+  { to: '/calendar', label: 'Calendar', Icon: CalendarRange },
   { to: '/news', label: 'News', Icon: Newspaper },
   { to: '/create-club', label: 'Create', Icon: Plus },
   { to: '/settings', label: 'Settings', Icon: SettingsIcon },
-];
-
+]
 export default function Sidebar() {
   const { currentUser, profile, logout } = useAuth();
   const navigate = useNavigate();

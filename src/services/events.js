@@ -46,7 +46,29 @@ export function listenToClubEvents(clubId, callback, onError) {
       console.error(`[events] listenToClubEvents("${clubId}") failed:`, err);
       if (onError) onError(err);
     }
-  );
+ );
+}
+// Every club event whose date falls inside [start, end) - powers the Club
+// Calendar page one visible month at a time. A range filter on a single
+// field (dateTime) is covered by Firestore's automatic single-field index,
+// so unlike the per-club queries above this one needs no composite index.
+export function listenToEventsInRange(start, end, callback, onError) {
+ const q = query(
+ eventsCol,
+ where('dateTime', '>=', start),
+ where('dateTime', '<', end),
+ orderBy('dateTime', 'asc')
+ );
+ return onSnapshot(
+ q,
+ (snap) => {
+ callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+ },
+ (err) => {
+ console.error('[events] listenToEventsInRange failed:', err);
+ if (onError) onError(err);
+ }
+ );
 }
 // Events that already happened, newest first - powers the "Past events"
 // section on a club page (grouped by semester, see PastEvents.jsx).
