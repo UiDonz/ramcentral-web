@@ -21,7 +21,16 @@ import {
   listenToAnnouncements,
   postAnnouncement
 } from '../services/clubs';
-import { listenToClubEvents, createEvent, updateEvent, rsvpToEvent, cancelEvent } from '../services/events';
+
+import {
+ listenToClubEvents,
+ listenToPastClubEvents,
+ createEvent,
+ updateEvent,
+ rsvpToEvent,
+ cancelEvent
+} from '../services/events';
+
 import DateTimePicker from '../components/DateTimePicker';
 import {
   isClubOfficerRole,
@@ -43,7 +52,7 @@ import {
   listenToClubRoomBookings
 } from '../services/admin';
 import ClubChat from '../components/ClubChat';
-
+import PastEvents from '../components/PastEvents';
 // Turns a saved event time into the 'YYYY-MM-DDTHH:mm' text the date picker uses.
 function toDateTimeValue(ts) {
   const d = new Date(ts && ts.seconds ? ts.seconds * 1000 : ts);
@@ -59,6 +68,7 @@ export default function ClubDetail() {
   const [myMembership, setMyMembership] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [events, setEvents] = useState([]);
+  const [pastEvents, setPastEvents] = useState([]);
   const [announcementForm, setAnnouncementForm] = useState({ title: '', body: '' });
   const [eventForm, setEventForm] = useState({ title: '', description: '', location: '', dateTime: '' });
   const [editingEvent, setEditingEvent] = useState(null); // { id, title, description, location, dateTime }
@@ -94,11 +104,14 @@ export default function ClubDetail() {
       setEventsLoadError(`${err.code || 'error'}: ${err.message}`)
     );
     return unsub;
-  }, [clubId]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    getMembership(clubId, currentUser.uid).then(setMyMembership);
+ }, [clubId]);
+ useEffect(() => {
+ const unsub = listenToPastClubEvents(clubId, setPastEvents);
+ return unsub;
+ }, [clubId]);
+ useEffect(() => {
+ if (!currentUser) return;
+ getMembership(clubId, currentUser.uid).then(setMyMembership);
   }, [clubId, currentUser, members]);
 
   // Resolves display names from the users collection (members only store uid + role); fine at club scale.
@@ -481,13 +494,15 @@ export default function ClubDetail() {
               </button>
             )}
           </div>
-          )
-        )}
-      </section>
-
-      <section className="detail-section">
-        <h2>Members ({members.filter((m) => m.status === 'approved').length})</h2>
-        {isOfficer && pendingMembers.length > 0 && (
+          ))}
+  </section>
+  <section className="detail-section">
+  <h2>Past events</h2>
+  <PastEvents events={pastEvents} />
+  </section>
+  <section className="detail-section">
+  <h2>Members ({members.filter((m) => m.status === 'approved').length})</h2>
+  {isOfficer && pendingMembers.length > 0 & (
           <div>
             <h3>Pending requests</h3>
             {pendingMembers.map((m) => (
