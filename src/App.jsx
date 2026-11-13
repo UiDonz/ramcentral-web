@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -7,6 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
 import BackgroundLayer from './components/BackgroundLayer';
 import Login from './pages/Login';
+import Onboarding from './pages/Onboarding';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
 import ClubDetail from './pages/ClubDetail';
@@ -21,7 +22,7 @@ import './styles/app.css';
 
 // The sidebar only makes sense once someone's signed in - Login/Signup
 function AppShell() {
-  const { currentUser } = useAuth();
+  const { currentUser, profile } = useAuth();
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
 
@@ -34,6 +35,18 @@ function AppShell() {
       </Routes>
     );
   }
+  // Students who haven't answered the new-account questions are held on /welcome with no sidebar.
+  // Staff/faculty skip this, and profile is null for a moment on first load.
+  const needsOnboarding = profile && profile.role === 'student' && !profile.onboardingComplete;
+  if (needsOnboarding) {
+    return (
+      <Routes>
+        <Route path="/welcome" element={<Onboarding />} />
+        <Route path="*" element={<Navigate to="/welcome" replace />} />
+      </Routes>
+    );
+  }
+
   return (
     <>
       {/* Fixed behind the app; renders nothing unless the user turned on a background in Settings. */}
@@ -46,11 +59,12 @@ function AppShell() {
             <Route path="/clubs/:clubId" element={<ProtectedRoute><ClubDetail /></ProtectedRoute>} />
            <Route path="/create-club" element={<ProtectedRoute><CreateClub /></ProtectedRoute>} />
            <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-             <Route path="/calendar" element={<ProtectedRoute><ClubCalendar /></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><ClubCalendar /></ProtectedRoute>} />
             <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+            <Route path="/welcome" element={<Navigate to="/" replace />} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-               {  /* Appearance (theme/accent/font size) + Home layout reorder -
-             open to any signed-in user, same as Profile. */}
+            {/* Appearance (theme/accent/font size) + Home layout reorder -
+                open to any signed-in user, same as Profile. */}
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           {/* Staff/Super Admin Command Center - StaffRoute redirects any
              signed-in non-faculty account back to / rather than /login,

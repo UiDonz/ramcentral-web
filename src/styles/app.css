@@ -1231,3 +1231,22 @@ html[data-theme="dark"] .dtp-pop button.dtp-sel:hover { background: var(--gold);
 .club-day-event { padding: 0.6em 0; border-bottom: 1px solid var(--border); }
 .club-day-event:last-child { border-bottom: none; }
 .club-day-event-meta { font-size: 0.8rem; color: var(--muted); margin: 0.1em 0 0.2em; }
+
+/* --- Sprint 6: major/interest picker (MajorInterestPicker.jsx) --- */
+.picker-group { border: none; padding: 0; margin: 1.2em 0; }
+.picker-group legend { font-weight: 600; color: var(--ink); padding: 0; margin-bottom: 0.6em; }
+.picker-hint { font-weight: 400; color: var(--muted); font-size: 0.82rem; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.5em; }
+/* Unselected chips read --ink (not the accent-driven --forest) for text and
+   border - the same contrast lesson as Sprint 5's dark-mode fixes. */
+button.chip {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.4em 0.9em;
+  font-size: 0.85rem;
+}
+button.chip:hover { background: rgba(201, 154, 60, 0.15); }
+button.chip.selected { background: var(--forest); border-color: var(--forest); color: #fff; }
+button.chip:disabled { opacity: 0.45; cursor: not-allowed; }
