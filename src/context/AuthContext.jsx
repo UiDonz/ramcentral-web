@@ -37,11 +37,16 @@ export function AuthProvider({ children }) {
  name,
  ramId,
  email,
- role: role || 'student',
- bio: '',
- createdAt: serverTimestamp()
- };
- await setDoc(doc(db, 'users', cred.user.uid), userDoc);
+      role: role || 'student',
+      bio: '',
+      // New-account questions (Onboarding.jsx) fill these in; students
+      // are sent there until onboardingComplete is true.
+      majors: [],
+      interests: [],
+      onboardingComplete: false,
+      createdAt: serverTimestamp()
+    };
+    await setDoc(doc(db, 'users', cred.user.uid), userDoc);
  setProfile(userDoc);
  return cred.user;
  }
@@ -50,10 +55,19 @@ export function AuthProvider({ children }) {
  }
  function logout() {
  return signOut(auth);
- }
- const value = { currentUser, profile, loading, signup, login, logout };
- return (
- <AuthContext.Provider value={value}>
+  }
+
+  // Merge fields into the in-memory profile after a successful write to
+  // users/{uid} (e.g. saving the onboarding answers), so the UI updates
+  // without waiting for a re-fetch.
+  function updateProfileLocal(patch) {
+    setProfile((p) => ({ ...(p || {}), ...patch }));
+  }
+
+  const value = { currentUser, profile, loading, signup, login, logout, updateProfileLocal };
+
+  return (
+    <AuthContext.Provider value={value}>
  {!loading && children}
  </AuthContext.Provider>
  );
