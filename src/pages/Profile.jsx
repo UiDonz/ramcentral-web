@@ -25,12 +25,12 @@ export default function Profile() {
 
   async function handleSaveAnswers(e) {
     e.preventDefault();
-    setAnswersError('');
-    try {
-      const patch = await saveProfileAnswers(currentUser.uid, answers);
-      updateProfileLocal(patch);
-      setAnswersSaved(true);
-      setTimeout(() => setAnswersSaved(false), 2000);
+      setAnswersError('');
+      try {
+        const patch = await saveProfileAnswers(currentUser.uid, answers, profile?.majors || []);
+        updateProfileLocal(patch);
+        setAnswersSaved(true);
+        setTimeout(() => setAnswersSaved(false), 2000);
     } catch (err) {
       setAnswersError('Could not save. Please try again.');
     }

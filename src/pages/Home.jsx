@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { collectionGroup, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { listenToClubs } from '../services/clubs';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import ClubCard from '../components/ClubCard';
+import { recommendClubs } from '../services/recommendations';
 
 export default function Home() {
-  const { currentUser } = useAuth();
+  const { currentUser, profile } = useAuth();
   const { settings } = useSettings();
   const [clubs, setClubs] = useState([]);
   const [myClubIds, setMyClubIds] = useState(new Set());
@@ -34,8 +36,24 @@ export default function Home() {
 
   const filtered = clubs.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.category?.toLowerCase().includes(search.toLowerCase())
+    c.category?.toLowerCase().includes(search.toLowerCase()) ||
+    (c.tags || []).some((tg) => tg.includes(search.toLowerCase()))
   );
+
+  // "Recommended for you" - clubs whose members share the signed-in
+  // student's major (see services/recommendations.js). Computed from the
+  // full club list rather than `filtered`, so typing in the search box
+  // doesn't make the recommendations jump around.
+  const recommendations = useMemo(
+     () => recommendClubs({
+       clubs,
+       majors: profile?.majors || [],
+       interests: profile?.interests || [],
+       joinedIds: myClubIds
+     }),
+     [clubs, profile, myClubIds]
+  );
+  const hasAnswers = (profile?.majors?.length || 0) + (profile?.interests?.length || 0) > 0;
 
   const myClubs = filtered.filter((c) => myClubIds.has(c.id));
   const otherClubs = filtered.filter((c) => !myClubIds.has(c.id));
@@ -67,13 +85,33 @@ export default function Home() {
         <h1>Clubs</h1>
         <input
           className="search-input"
-          placeholder="Search clubs by name or category"
+          placeholder="Search clubs by name, category or tag"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-      </div>
+       </div>
 
-      {settings.homeLayout.map((key) => sections[key] || null)}
-    </div>
+       {/* Fixed position above the user-orderable sections below (it isn't
+           part of settings.homeLayout, so nobody's saved layout can hide
+           or lose it). Hidden while searching to keep results focused. */}
+       {search === '' && recommendations.length > 0 && (
+         <section>
+           <h2>Recommended for you</h2>
+           <div className="club-grid">
+             {recommendations.map((r) => (
+               <ClubCard key={r.club.id} club={r.club} reason={r.reason} detail={r.detail} />
+             ))}
+           </div>
+         </section>
+       )}
+       {search === '' && profile?.role === 'student' && !hasAnswers && (
+         <p className="recommend-prompt">
+           Want club suggestions? <Link to="/profile">Add your major and interests</Link> and we'll
+           recommend clubs students like you join.
+         </p>
+       )}
+
+       {settings.homeLayout.map((key) => sections[key] || null)}
+     </div>
   );
 }

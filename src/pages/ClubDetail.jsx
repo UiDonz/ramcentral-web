@@ -53,6 +53,8 @@ import {
 } from '../services/admin';
 import ClubChat from '../components/ClubChat';
 import PastEvents from '../components/PastEvents';
+import { majorBreakdown, formatShare } from '../services/recommendations';
+import { parseTags, SUGGESTED_TAGS } from '../utils/tags';
 // Turns a saved event time into the 'YYYY-MM-DDTHH:mm' text the date picker uses.
 function toDateTimeValue(ts) {
   const d = new Date(ts && ts.seconds ? ts.seconds * 1000 : ts);
@@ -174,11 +176,11 @@ export default function ClubDetail() {
   async function handleJoinLeave() {
     if (myMembership) {
       await leaveClub(clubId, currentUser.uid, myMembership.status === 'approved');
-      setMyMembership(null);
-    } else {
-      await joinClub(clubId, currentUser.uid, club.requiresApproval);
-      setMyMembership(await getMembership(clubId, currentUser.uid));
-    }
+        setMyMembership(null);
+      } else {
+        await joinClub(clubId, currentUser.uid, club.requiresApproval, profile?.majors || []);
+        setMyMembership(await getMembership(clubId, currentUser.uid));
+      }
   }
 
   async function handlePostAnnouncement(e) {
@@ -245,15 +247,20 @@ export default function ClubDetail() {
     }
   }
 
+  function addSuggestedTag(tag) {
+    setInfoForm((f) => ({ ...f, tagsText: parseTags([...parseTags(f.tagsText ?? f.tags), tag]).join(', ') }));
+  }
+
   async function handleSaveInfo(e) {
     e.preventDefault();
     await updateClub(clubId, {
+      tags: parseTags(infoForm.tagsText ?? infoForm.tags),
       description: infoForm.description,
       meetingTimes: infoForm.meetingTimes,
       contactInfo: infoForm.contactInfo,
       requiresApproval: infoForm.requiresApproval
     });
-    setClub((c) => ({ ...c, ...infoForm }));
+    setClub((c) => ({ ...c, ...infoForm, tags: parseTags(infoForm.tagsText ?? infoForm.tags) }));
     setEditingInfo(false);
   }
 
@@ -351,11 +358,17 @@ export default function ClubDetail() {
         {!editingInfo ? (
           <>
             <p>{club.description}</p>
-            {club.meetingTimes && <p><strong>Meets:</strong> {club.meetingTimes}</p>}
-            {club.contactInfo && <p><strong>Contact:</strong> {club.contactInfo}</p>}
-            <div className="form-actions">
-              {isOfficer && <button className="link-button" onClick={() => setEditingInfo(true)}>Edit club info</button>}
-              {isStaffUser && club.status === 'active' && (
+             {club.meetingTimes && <p><strong>Meets:</strong> {club.meetingTimes}</p>}
+             {club.contactInfo && <p><strong>Contact:</strong> {club.contactInfo}</p>}
+             {majorBreakdown(club, 3).length > 0 && (
+                <p>
+                  <strong>Most common majors:</strong>{' '}
+                  {majorBreakdown(club, 3).map((m) => `${m.short} ${formatShare(m.share)}`).join(' · ')}
+                </p>
+             )}
+             <div className="form-actions">
+                {isOfficer && <button className="link-button" onClick={() => setEditingInfo(true)}>Edit club info</button>}
+                {isStaffUser && club.status === 'active' && (
                 <button className="link-button" onClick={() => runGuarded(archiveClub, clubId, staffActor)}>
                   Archive this club
                 </button>
@@ -373,6 +386,18 @@ export default function ClubDetail() {
             <label>Contact info
               <input value={infoForm.contactInfo} onChange={(e) => setInfoForm((f) => ({ ...f, contactInfo: e.target.value }))} />
             </label>
+            <label>Tags (separate with commas, up to 6)
+              <input
+                value={infoForm.tagsText ?? (infoForm.tags || []).join(', ')}
+                placeholder="coding, networking, beginner-friendly"
+                onChange={(e) => setInfoForm((f) => ({ ...f, tagsText: e.target.value }))}
+              />
+            </label>
+            <div className="tag-suggestions">
+              {SUGGESTED_TAGS.map((t) => (
+                <button type="button" key={t} className="tag-suggest" onClick={() => addSuggestedTag(t)}>+ {t}</button>
+              ))}
+            </div>
             <label className="checkbox-label">
               <input type="checkbox" checked={infoForm.requiresApproval} onChange={(e) => setInfoForm((f) => ({ ...f, requiresApproval: e.target.checked }))} />
               Require officer approval to join
@@ -502,7 +527,7 @@ export default function ClubDetail() {
   </section>
   <section className="detail-section">
   <h2>Members ({members.filter((m) => m.status === 'approved').length})</h2>
-  {isOfficer && pendingMembers.length > 0 & (
+  {isOfficer && pendingMembers.length > 0 && (
           <div>
             <h3>Pending requests</h3>
             {pendingMembers.map((m) => (
