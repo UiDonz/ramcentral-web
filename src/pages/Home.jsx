@@ -6,7 +6,15 @@ import { listenToClubs } from '../services/clubs';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import ClubCard from '../components/ClubCard';
-import { recommendClubs } from '../services/recommendations';
+
+import {
+  recommendClubs,
+  majorBreakdown,
+  MIN_SAMPLE_SIZE,
+  MIN_SHARE,
+} from '../services/recommendations';
+import { MAJORS } from '../data/profileOptions';
+
 
 export default function Home() {
   const { currentUser, profile } = useAuth();
@@ -15,10 +23,67 @@ export default function Home() {
   const [myClubIds, setMyClubIds] = useState(new Set());
   const [search, setSearch] = useState('');
 
+  const [category, setCategory] = useState('all');
+const [majorFilter, setMajorFilter] = useState('all');
+const [sort, setSort] = useState('members');
+
   useEffect(() => {
     const unsub = listenToClubs(setClubs);
     return unsub;
   }, []);
+
+  const categories = useMemo(
+  () =>
+    [...new Set(clubs.map((c) => (c.category || '').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b)),
+  [clubs]
+);
+
+const term = search.trim().toLowerCase();
+
+const filtersActive =
+  term !== '' ||
+  category !== 'all' ||
+  majorFilter !== 'all';
+
+function matchesMajor(club) {
+  if (majorFilter === 'all') return true;
+
+  if ((club.majorSampleSize || 0) < MIN_SAMPLE_SIZE) {
+    return false;
+  }
+
+  return majorBreakdown(club, 20).some(
+    (m) => m.id === majorFilter && m.share >= MIN_SHARE
+  );
+}
+
+const filtered = clubs
+  .filter(
+    (c) =>
+      term === '' ||
+      c.name.toLowerCase().includes(term) ||
+      c.category?.toLowerCase().includes(term) ||
+      c.description?.toLowerCase().includes(term) ||
+      (c.tags || []).some((tg) => tg.includes(term))
+  )
+  .filter(
+    (c) =>
+      category === 'all' ||
+      (c.category || '').trim() === category
+  )
+  .filter(matchesMajor)
+  .sort((a, b) =>
+    sort === 'name'
+      ? a.name.localeCompare(b.name)
+      : (b.memberCount || 0) - (a.memberCount || 0)
+  );
+
+function clearFilters() {
+  setSearch('');
+  setCategory('all');
+  setMajorFilter('all');
+}
 
   useEffect(() => {
     if (!currentUser) return;
@@ -34,12 +99,7 @@ export default function Home() {
     return unsub;
   }, [currentUser]);
 
-  const filtered = clubs.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.category?.toLowerCase().includes(search.toLowerCase()) ||
-    (c.tags || []).some((tg) => tg.includes(search.toLowerCase()))
-  );
-
+  
   // "Recommended for you" - clubs whose members share the signed-in
   // student's major (see services/recommendations.js). Computed from the
   // full club list rather than `filtered`, so typing in the search box
