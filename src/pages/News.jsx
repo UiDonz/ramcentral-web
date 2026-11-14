@@ -100,6 +100,12 @@ function formatEventDateTime(dateTime) {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 }
 
+// Long descriptions made the feed cards huge, so cut them to a short preview.
+function shorten(text, max = 140) {
+  if (!text || text.length <= max) return text;
+  return text.slice(0, max).replace(/\s+\S*$/, '') + '…';
+}
+
 // Turns a calendar event (date is 'YYYY-M-D') into the same shape the feed cards use.
 function buildCalendarFeedItem(ev) {
   const [y, m, d] = ev.date.split('-').map(Number);
@@ -108,7 +114,7 @@ function buildCalendarFeedItem(ev) {
     id: `cal-${ev.id}`,
     title: ev.title,
     date: day.toLocaleDateString([], { month: 'short', day: 'numeric' }),
-    summary: [ev.time, ev.description && ev.description !== ev.title ? ev.description : '']
+    summary: [ev.time, ev.description && ev.description !== ev.title ? shorten(ev.description) : '']
       .filter(Boolean)
       .join(' — '),
     url: ev.url || ACADEMIC_CALENDAR_URL,
@@ -125,7 +131,7 @@ function buildClubEventItem(ev, clubName, isMine) {
     summary: [
       clubName ? `Posted by ${clubName}.` : '',
       ev.location ? `Location: ${ev.location}.` : '',
-      ev.description || '',
+      shorten(ev.description) || '',
     ]
       .filter(Boolean)
       .join(' '),
@@ -569,7 +575,7 @@ export default function News() {
                     tag={getItemTag(ev, ev.category)}
                     title={ev.title}
                     detail={
-                      [ev.time, ev.description && ev.description !== ev.title ? ev.description : '']
+                      [ev.time, ev.description && ev.description !== ev.title ? shorten(ev.description) : '']
                         .filter(Boolean)
                         .join(' — ')
                     }

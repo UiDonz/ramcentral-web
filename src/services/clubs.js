@@ -13,7 +13,8 @@ import {
   orderBy,
   serverTimestamp,
   increment,
-  onSnapshot
+  onSnapshot,
+  collectionGroup
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { assertPermission, canAssignRole, isStaff, CLUB_ROLE_LABELS } from './rbac';
@@ -79,29 +80,125 @@ export async function getMembership(clubId, uid) {
   return snap.exists() ? snap.data() : null;
 }
 
+// Each club doc keeps two counters so its most common majors can be shown without reading every profile:
+//     majorCounts:     { cpis: 13, csia: 4, ... } members who listed that major
+//     majorSampleSize: approved members who listed at least one major
+// A member with two majors counts once in each major but once in majorSampleSize, so a share is
+// majorCounts[x] / majorSampleSize. Majors are the stable ids from data/profileOptions.js.
+function majorCounterUpdates(majors, sign) {
+   const list = Array.isArray(majors) ? majors : [];
+   if (list.length === 0) return {};
+   const updates = { majorSampleSize: increment(sign) };
+   list.forEach((id) => {
+     updates[`majorCounts.${id}`] = increment(sign);
+   });
+   return updates;
+}
+
+async function getUserMajors(uid) {
+  const snap = await getDoc(doc(db, 'users', uid));
+  return snap.exists() ? snap.data().majors || [] : [];
+}
+
 // Joins immediately, or creates a pending membership if the club requires approval.
-export async function joinClub(clubId, uid, requiresApproval) {
+// majors = the joining user's own majors (ClubDetail passes profile.majors).
+export async function joinClub(clubId, uid, requiresApproval, majors = []) {
   await setDoc(doc(db, 'clubs', clubId, 'members', uid), {
     uid,
     role: 'member',
     status: requiresApproval ? 'pending' : 'approved',
     joinedAt: serverTimestamp()
-  });
-  if (!requiresApproval) {
-    await updateDoc(doc(db, 'clubs', clubId), { memberCount: increment(1) });
-  }
+    });
+    if (!requiresApproval) {
+      await updateDoc(doc(db, 'clubs', clubId), {
+        memberCount: increment(1),
+        ...majorCounterUpdates(majors, 1)
+      });
+    }
 }
 
 export async function approveMembership(clubId, uid) {
   await updateDoc(doc(db, 'clubs', clubId, 'members', uid), { status: 'approved' });
-  await updateDoc(doc(db, 'clubs', clubId), { memberCount: increment(1) });
+  const majors = await getUserMajors(uid);
+  await updateDoc(doc(db, 'clubs', clubId), {
+    memberCount: increment(1),
+    ...majorCounterUpdates(majors, 1)
+  });
 }
 
 export async function leaveClub(clubId, uid, wasApproved) {
+  // Read the majors BEFORE deleting, so the decrement matches what joining added.
+  const majors = wasApproved ? await getUserMajors(uid) : [];
   await deleteDoc(doc(db, 'clubs', clubId, 'members', uid));
   if (wasApproved) {
-    await updateDoc(doc(db, 'clubs', clubId), { memberCount: increment(-1) });
+    await updateDoc(doc(db, 'clubs', clubId), {
+      memberCount: increment(-1),
+      ...majorCounterUpdates(majors, -1)
+    });
   }
+}
+
+// Called after a user edits their majors (Profile / Onboarding): applies the difference to every
+// club they're an approved member of, so a club's stats follow the member.
+export async function syncMajorStatsForUser(uid, oldMajors = [], newMajors = []) {
+  const removed = oldMajors.filter((m) => !newMajors.includes(m));
+  const added = newMajors.filter((m) => !oldMajors.includes(m));
+  const sampleDelta = (newMajors.length > 0 ? 1 : 0) - (oldMajors.length > 0 ? 1 : 0);
+  if (removed.length === 0 && added.length === 0 && sampleDelta === 0) return;
+
+    const snap = await getDocs(
+       query(collectionGroup(db, 'members'), where('uid', '==', uid), where('status', '==', 'approved'))
+    );
+    await Promise.all(
+       snap.docs.map((d) => {
+          const updates = {};
+          removed.forEach((m) => { updates[`majorCounts.${m}`] = increment(-1); });
+          added.forEach((m) => { updates[`majorCounts.${m}`] = increment(1); });
+          if (sampleDelta !== 0) updates.majorSampleSize = increment(sampleDelta);
+          return updateDoc(d.ref.parent.parent, updates);
+       })
+    );
+}
+
+// Staff-only backfill: rebuilds every club's majorCounts/majorSampleSize from its approved
+// members' profiles. Run once after this feature ships, or whenever the counters drift.
+export async function recomputeMajorStats(actor) {
+  assertPermission(
+     isStaff(actor),
+     '403 Forbidden: only Staff can recompute club major stats.'
+  );
+  const clubsSnap = await getDocs(clubsCol);
+  const majorCache = new Map();
+  let clubsUpdated = 0;
+
+    for (const clubDoc of clubsSnap.docs) {
+      const membersSnap = await getDocs(
+         query(collection(db, 'clubs', clubDoc.id, 'members'), where('status', '==', 'approved'))
+      );
+      const majorCounts = {};
+
+
+
+        let majorSampleSize = 0;
+        for (const m of membersSnap.docs) {
+          const uid = m.data().uid;
+          if (!majorCache.has(uid)) majorCache.set(uid, await getUserMajors(uid));
+          const majors = majorCache.get(uid);
+          if (majors.length === 0) continue;
+          majorSampleSize += 1;
+          majors.forEach((id) => { majorCounts[id] = (majorCounts[id] || 0) + 1; });
+        }
+        await updateDoc(clubDoc.ref, { majorCounts, majorSampleSize });
+        clubsUpdated += 1;
+    }
+
+    await logAudit({
+      actor,
+      action: 'recompute_major_stats',
+      target: `${clubsUpdated} clubs`,
+      targetType: 'club'
+    });
+    return { clubsUpdated };
 }
 
 // Kept for backward compatibility; new code should use changeMemberRole(), which adds the RBAC check.

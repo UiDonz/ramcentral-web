@@ -627,7 +627,11 @@ html[data-font-size="large"] { font-size: 18px; }
  gap: 2px;
  }
 .calendar-cell.muted { color: #d8d4c6; cursor: default; }
-.calendar-cell.today { background: rgba(28, 61, 46, 0.08); }
+.calendar-cell.today {
+ background: rgba(201, 154, 60, 0.22);
+ box-shadow: inset 0 0 0 2px var(--gold);
+ font-weight: 700;
+ }
 /* Certified-officer badge, shown next to a member's name in the Members list. */
 .certified-badge {
  display: inline-block;
@@ -1250,3 +1254,34 @@ button.chip {
 button.chip:hover { background: rgba(201, 154, 60, 0.15); }
 button.chip.selected { background: var(--forest); border-color: var(--forest); color: #fff; }
 button.chip:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* --- Sprint 6: recommendations (Home.jsx / ClubCard.jsx) --- */
+.recommended-badge { background: rgba(28, 61, 46, 0.12); color: var(--ink); font-weight: 500; }
+.recommended-detail { font-size: 0.8rem; color: var(--muted); margin: 0.3em 0 0; }
+.recommend-prompt { color: var(--muted); font-size: 0.9rem; margin: 1em 0; }
+
+/* Dark theme: the category label on club cards used dark --forest, hard to read. */
+html[data-theme="dark"] .category-dot {
+  color: var(--gold) !important;
+}
+
+/* Club tags (ClubCard.jsx, Edit club info) */
+.tag-list { display: flex; flex-wrap: wrap; gap: 0.35em; margin-top: 0.5em; }
+.tag-chip {
+  background: rgba(201, 154, 60, 0.18);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.1em 0.65em;
+  font-size: 0.74rem;
+}
+.tag-suggestions { display: flex; flex-wrap: wrap; gap: 0.35em; margin: -0.3em 0 0.9em; }
+.tag-suggest {
+  background: none;
+  border: 1px solid var(--gold);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.1em 0.65em;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+.tag-suggest:hover { background: rgba(201, 154, 60, 0.18); }

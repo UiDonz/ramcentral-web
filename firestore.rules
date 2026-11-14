@@ -104,11 +104,21 @@ allow create: if isSignedIn();
 // Officers edit their own club's info; Staff can additionally
 // change status (approve/deny/archive/restore) or override
 // anything else. Not split by field - a known simplification;
-// see Issue #19's comment on firestore.rules for the same
-// tradeoff made earlier in this project.
-allow update: if isClubOfficer(clubId) || isStaff();
-allow delete: if false;
-// --- clubs/{clubId}/members/{uid} ---
+       // see Issue #19's comment on firestore.rules for the same
+       // tradeoff made earlier in this project.
+       // Joining or leaving a club bumps the club doc's counters, and the
+       // person doing that is an ordinary member - not an officer - so a
+       // signed-in user may also update a club doc IF the only fields that
+       // change are the three denormalized counters below.
+       function onlyCounterFieldsChanged() {
+         return request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['memberCount', 'majorCounts', 'majorSampleSize']);
+       }
+       allow update: if isClubOfficer(clubId) || isStaff() ||
+         (isSignedIn() && onlyCounterFieldsChanged());
+       allow delete: if false;
+
+       // --- clubs/{clubId}/members/{uid} ---
 match /members/{uid} {
 allow read: if isSignedIn();
 // A student can create their own membership doc (join request).
@@ -201,19 +211,11 @@ allow update: if isStaff();
 allow delete: if false;
 }
 // --- settings/{id} ---
-// Currently just settings/budget (the campus-wide remaining-budget
-// figure shown in Quick Stats). Any signed-in user can read it;
-// only Staff can change it.
 match /settings/{id} {
 allow read: if isSignedIn();
 allow write: if isStaff();
 }
 // --- schoolNews/{id}, academicCalendar/{id}, campusDigest/{id} ---
-// Written only by scripts/scrape-news.js via the Firebase Admin SDK,
-// which bypasses these rules entirely (admin credentials are never
-// subject to security rules). Every client write is rejected here on
-// purpose - nobody signed in through the normal app should ever be
-// able to edit scraped news or calendar data.
 match /schoolNews/{id} {
 allow read: if isSignedIn();
 allow write: if false;

@@ -9,7 +9,8 @@ import {
   approveClubApplication,
   denyClubApplication,
   archiveClub,
-  unarchiveClub
+  unarchiveClub,
+  recomputeMajorStats
 } from '../services/clubs';
 
 import {
@@ -69,6 +70,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState(null);
   const [budgetInput, setBudgetInput] = useState('');
+  const [statsMessage, setStatsMessage] = useState('');
 
   useEffect(() => listenToAllClubsForStaff(setAllClubs), []);
   useEffect(() => listenToPendingClubs(setPendingClubs), []);
@@ -100,6 +102,21 @@ export default function AdminDashboard() {
 
     await handle(setCampusBudget, Number(budgetInput), actor);
     setBudgetInput('');
+  }
+
+  async function handleRecomputeMajorStats() {
+    setError(null);
+    setStatsMessage('Recomputing...');
+    try {
+      const { clubsUpdated } = await recomputeMajorStats(actor);
+      setStatsMessage(`Done - refreshed major stats for ${clubsUpdated} clubs.`);
+    } catch (err) {
+
+
+
+          setStatsMessage('');
+          setError(err.message);
+      }
   }
 
   const pendingApprovalsTotal =
@@ -263,7 +280,17 @@ export default function AdminDashboard() {
       <section>
         <h2>Master Club Directory</h2>
 
-        <table>
+           {/* One-time backfill after the major-recommendations feature ships
+               (existing members predate the counters), and a repair tool if
+               the counters ever drift. */}
+           <div className="form-actions" style={{ marginBottom: '0.8em' }}>
+             <button type="button" className="secondary" onClick={handleRecomputeMajorStats}>
+               Recompute major stats
+             </button>
+             {statsMessage && <span className="badge">{statsMessage}</span>}
+           </div>
+
+           <table>
           <thead>
             <tr>
               <th>Name</th>

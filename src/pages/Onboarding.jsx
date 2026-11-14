@@ -20,12 +20,12 @@ export default function Onboarding() {
 
   async function finish(payload) {
     setError('');
-    setSaving(true);
-    try {
-      const saved = await saveProfileAnswers(currentUser.uid, payload);
-      updateProfileLocal(saved);
-      navigate('/', { replace: true });
-    } catch (err) {
+      setSaving(true);
+      try {
+        const saved = await saveProfileAnswers(currentUser.uid, payload, profile?.majors || []);
+        updateProfileLocal(saved);
+        navigate('/', { replace: true });
+      } catch (err) {
       setError('Could not save your answers. Please try again.');
       setSaving(false);
     }
