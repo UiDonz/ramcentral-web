@@ -1,0 +1,136 @@
+
+// Club chat message reports.
+// Chat messages are immutable (firestore.rules: update/delete false),
+// so a report stores a snapshot of the message text and author.
+//
+// Reports are stored in one top-level collection, messageReports,
+// allowing Staff to read all open reports with one query.
+//
+// Permissions:
+// - Approved club members can create reports.
+// - Only Staff can read, review, or dismiss reports.
+
+import {
+  collection,
+  doc,
+  setDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  serverTimestamp,
+} from 'firebase/firestore';
+
+import { db } from '../firebase';
+import { assertPermission, isStaff } from './rbac';
+import { logAudit } from './admin';
+
+// Available report reasons.
+export const REPORT_REASONS = [
+  'Harassment or bullying',
+  'Hate speech',
+  'Spam',
+  'Inappropriate content',
+  'Other',
+];
+
+// Report a chat message.
+export async function reportMessage({
+  clubId,
+  clubName,
+  message,
+  reporter,
+  reason,
+}) {
+  // Each reporter can report the same message only once.
+  const reportId = `${clubId}_${message.id}_${reporter.uid}`;
+
+  try {
+    await setDoc(doc(db, 'messageReports', reportId), {
+      clubId,
+      clubName: clubName || '',
+      messageId: message.id,
+      messageText: (message.text || '').slice(0, 1000),
+      messageAuthorId: message.authorId,
+      messageAuthorName: message.authorName || 'Member',
+      reporterUid: reporter.uid,
+      reporterName: reporter.name || 'Member',
+      reason,
+      status: 'open',
+      createdAt: serverTimestamp(),
+    });
+  } catch (err) {
+    if (err.code === 'permission-denied') {
+      throw new Error('You have already reported this message.');
+    }
+
+    throw err;
+  }
+}
+
+// Listen for open reports.
+// Reports are sorted by newest first, with a maximum of 100.
+export function listenToOpenReports(callback, onError) {
+  const q = query(
+    collection(db, 'messageReports'),
+    where('status', '==', 'open'),
+    orderBy('createdAt', 'desc'),
+    limit(100)
+  );
+
+  return onSnapshot(
+    q,
+    (snap) => {
+      callback(
+        snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }))
+      );
+    },
+    (err) => {
+      console.error('[reports] listenToOpenReports failed:', err);
+
+      if (onError) {
+        onError(err);
+      }
+    }
+  );
+}
+
+// Resolve a report.
+// Resolution can be either:
+// - 'reviewed': Staff reviewed and handled the report.
+// - 'dismissed': Staff determined that no action was needed.
+//
+// Resolved reports leave the open queue.
+// An audit entry is also created.
+export async function resolveReport(
+  reportId,
+  resolution,
+  actor,
+  report
+) {
+  assertPermission(
+    isStaff(actor),
+    '403 Forbidden: only Staff can review message reports.'
+  );
+
+  await updateDoc(doc(db, 'messageReports', reportId), {
+    status: resolution,
+    reviewedBy: actor.uid,
+    reviewedAt: serverTimestamp(),
+  });
+
+  await logAudit({
+    actor,
+    action: `report_${resolution}`,
+    target: report?.clubName || reportId,
+    targetType: 'message report',
+    details: report
+      ? `${report.reason} - message by ${report.messageAuthorName}`
+      : '',
+  });
+}
