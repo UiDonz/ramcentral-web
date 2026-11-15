@@ -1359,3 +1359,43 @@ html[data-theme="dark"] .category-dot {
   color: var(--muted);
   border-top: 1px solid var(--border);
 }
+
+/* --- Sprint 6: Reported Messages panel (AdminDashboard.jsx) --- */
+
+.report-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1em 1.2em;
+  margin-bottom: 0.8em;
+  color: var(--ink);
+}
+
+.report-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8em;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.report-card-meta .badge {
+  margin-top: 0;
+}
+
+.report-card-quote {
+  margin: 0.7em 0;
+  padding: 0.5em 0.9em;
+  border-left: 3px solid var(--gold);
+  background: rgba(201, 154, 60, 0.08);
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.report-card-people {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 0.7em;
+}
