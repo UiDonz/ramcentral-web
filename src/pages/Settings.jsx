@@ -17,7 +17,7 @@ const FONT_SIZES = [
   { key: 'default', label: 'Default' },
   { key: 'large', label: 'Large' }
 ];
-const HOME_SECTION_LABELS = { myClubs: 'My clubs', browseClubs: 'Browse clubs' };
+const HOME_SECTION_LABELS = { myClubs: 'My clubs', browseClubs: 'Recommended clubs' };
 
 const BACKGROUND_MODES = [
   { key: 'off', label: 'Off' },

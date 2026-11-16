@@ -13,7 +13,6 @@ import Home from './pages/Home';
 import ClubDetail from './pages/ClubDetail';
 import CreateClub from './pages/CreateClub';
 import Events from './pages/Events';
-import ClubCalendar from './pages/ClubCalendar';
 import Profile from './pages/Profile';
 import News from './pages/News';
 import AdminDashboard from './pages/AdminDashboard';
@@ -57,12 +56,11 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/clubs/:clubId" element={<ProtectedRoute><ClubDetail /></ProtectedRoute>} />
-           <Route path="/create-club" element={<ProtectedRoute><CreateClub /></ProtectedRoute>} />
-           <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><ClubCalendar /></ProtectedRoute>} />
-            <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
-            <Route path="/welcome" element={<Navigate to="/" replace />} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+ <Route path="/create-club" element={<ProtectedRoute><CreateClub /></ProtectedRoute>} />
+ <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+ <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+ <Route path="/welcome" element={<Navigate to="/" replace />} />
+ <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             {/* Appearance (theme/accent/font size) + Home layout reorder -
                 open to any signed-in user, same as Profile. */}
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
