@@ -6,6 +6,8 @@ import { listenToClubs } from '../services/clubs';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import ClubCard from '../components/ClubCard';
+import CampusDirectory from '../components/CampusDirectory';
+import { FARMINGDALE_CLUBS } from '../data/farmingdaleClubs';
 
 import {
   recommendClubs,
@@ -26,6 +28,9 @@ export default function Home() {
   const [category, setCategory] = useState('all');
 const [majorFilter, setMajorFilter] = useState('all');
 const [sort, setSort] = useState('members');
+  // 'active' = clubs on NewRamCentral (everything below), 'all' = the full
+  // Farmingdale club list (CampusDirectory.jsx).
+  const [tab, setTab] = useState('active');
 
   useEffect(() => {
     const unsub = listenToClubs(setClubs);
@@ -131,7 +136,8 @@ function clearFilters() {
     browseClubs: (
       <section key="browseClubs">
         <h2>{myClubs.length > 0 ? 'Browse more clubs' : 'Browse clubs'}</h2>
-        {otherClubs.length === 0 && <p className="empty-state">No clubs match yet. Try a different search.</p>}
+        {otherClubs.length === 0 && <p
+          className="empty-state">No clubs match yet. Try a different search or clear the filters.</p>}
         <div className="club-grid">
           {otherClubs.map((c) => <ClubCard key={c.id} club={c} />)}
         </div>
@@ -143,18 +149,73 @@ function clearFilters() {
     <div className="page">
       <div className="page-header">
         <h1>Clubs</h1>
-        <input
-          className="search-input"
-          placeholder="Search clubs by name, category or tag"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-       </div>
+        {tab === 'active' && (
+          <input
+            className="search-input"
+            placeholder="Search clubs by name, category, tag, or description"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        )}
+      </div>
+
+      <div className="tab-bar" role="tablist" aria-label="Club lists">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'active'}
+          className={`tab-btn${tab === 'active' ? ' selected' : ''}`}
+          onClick={() => setTab('active')}
+        >
+          On NewRamCentral <span className="tab-count">{clubs.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'all'}
+          className={`tab-btn${tab === 'all' ? ' selected' : ''}`}
+          onClick={() => setTab('all')}
+        >
+          All Farmingdale clubs <span className="tab-count">{FARMINGDALE_CLUBS.length}</span>
+        </button>
+      </div>
+
+      {tab === 'all' && <CampusDirectory liveClubs={clubs} />}
+
+      {tab === 'active' && (
+        <>
+
+      <div className="filter-bar">
+        <label>Category
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="all">All categories</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </label>
+        <label>Popular with
+          <select value={majorFilter} onChange={(e) => setMajorFilter(e.target.value)}>
+            <option value="all">Any major</option>
+            {MAJORS.map((m) => <option key={m.id} value={m.id}>{m.short}</option>)}
+          </select>
+        </label>
+        <label>Sort by
+          <select value={sort} onChange={(e) => setSort(e.target.value)}>
+            <option value="members">Most members</option>
+            <option value="name">Name (A-Z)</option>
+          </select>
+        </label>
+        <span className="filter-count">
+          {filtersActive ? `${filtered.length} of ${clubs.length} clubs` : `${clubs.length} clubs`}
+        </span>
+        {filtersActive && (
+          <button type="button" className="link-button" onClick={clearFilters}>Clear filters</button>
+        )}
+      </div>
 
        {/* Fixed position above the user-orderable sections below (it isn't
            part of settings.homeLayout, so nobody's saved layout can hide
-           or lose it). Hidden while searching to keep results focused. */}
-       {search === '' && recommendations.length > 0 && (
+           or lose it). Hidden while any search or filter is active to keep results focused. */}
+       {!filtersActive && recommendations.length > 0 && (
          <section>
            <h2>Recommended for you</h2>
            <div className="club-grid">
@@ -164,7 +225,7 @@ function clearFilters() {
            </div>
          </section>
        )}
-       {search === '' && profile?.role === 'student' && !hasAnswers && (
+       {!filtersActive && profile?.role === 'student' && !hasAnswers && (
          <p className="recommend-prompt">
            Want club suggestions? <Link to="/profile">Add your major and interests</Link> and we'll
            recommend clubs students like you join.
@@ -172,6 +233,8 @@ function clearFilters() {
        )}
 
        {settings.homeLayout.map((key) => sections[key] || null)}
-     </div>
+        </>
+      )}
+    </div>
   );
 }
