@@ -134,11 +134,9 @@ export default function CampusDirectory({ liveClubs }) {
 
             <div className="dir-actions">
               {c.live ? (
+                <Link to={`/clubs/${c.live.id}`}>Open club page &rarr;</Link>
               ) : (
-                <Link
-                  <Link to={`/clubs/${c.live.id}`}>Open club page &rarr;</Link>
-                  to={`/create-club?name=${encodeURIComponent(c.name)}&category=${encodeURIComponent(c.category)}`}
-                >
+                <Link to={`/create-club?name=${encodeURIComponent(c.name)}&category=${encodeURIComponent(c.category)}`}>
                   Add to NewRamCentral &rarr;
                 </Link>
               )}
