@@ -23,6 +23,7 @@ import {
   setCampusBudget,
   getQuickStats
 } from '../services/admin';
+import { listenToOpenReports, resolveReport } from '../services/reports';
 
 function StatTile({ label, value }) {
   return (
@@ -61,6 +62,7 @@ export default function AdminDashboard() {
   const [pendingBudget, setPendingBudget] = useState([]);
   const [pendingRooms, setPendingRooms] = useState([]);
   const [auditLog, setAuditLog] = useState([]);
+  const [openReports, setOpenReports] = useState([]);
 
   const [budget, setBudget] = useState({
     total: 0,
@@ -77,6 +79,10 @@ export default function AdminDashboard() {
   useEffect(() => listenToPendingBudgetRequests(setPendingBudget), []);
   useEffect(() => listenToPendingRoomBookings(setPendingRooms), []);
   useEffect(() => listenToAuditLog(setAuditLog), []);
+  useEffect(
+    () => listenToOpenReports(setOpenReports, () => setError('Could not load message reports.')),
+    []
+  );
   useEffect(() => listenToCampusBudget(setBudget), []);
 
   useEffect(() => {
@@ -158,6 +164,11 @@ export default function AdminDashboard() {
           <StatTile
             label="Pending Approvals"
             value={pendingApprovalsTotal}
+          />
+
+          <StatTile
+            label="Open Message Reports"
+            value={openReports.length}
           />
 
           <StatTile
@@ -272,6 +283,39 @@ export default function AdminDashboard() {
             >
               Deny
             </button>
+          </div>
+        ))}
+      </section>
+
+      {/* Reported Messages */}
+      <section>
+        <h2>Reported Messages</h2>
+        <p className="page-subtitle">
+          Club chat messages members have reported. Mark one reviewed once you've dealt with it,
+          or dismiss it if nothing's wrong - either way it leaves this list and is logged in the
+          Audit Trail.
+        </p>
+        {openReports.length === 0 && <p className="empty-state">No open reports.</p>}
+        {openReports.map((r) => (
+          <div key={r.id} className="report-card">
+            <div className="report-card-meta">
+              <span className="badge">{r.reason}</span>
+              <Link to={`/clubs/${r.clubId}`}>{r.clubName || 'Club'}</Link>
+              <span>{formatWhen(r.createdAt)}</span>
+            </div>
+            <blockquote className="report-card-quote">{r.messageText}</blockquote>
+            <div className="report-card-people">
+              Sent by <strong>{r.messageAuthorName}</strong> &middot; reported by {r.reporterName}
+            </div>
+            <div className="form-actions">
+              <button onClick={() => handle(resolveReport, r.id, 'reviewed', actor, r)}>Mark reviewed</button>
+              <button
+                className="secondary"
+                onClick={() => handle(resolveReport, r.id, 'dismissed', actor, r)}
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         ))}
       </section>

@@ -171,6 +171,33 @@ allow read: if isSignedIn();
 allow create, update, delete: if isSelf(uid);
 }
 }
+// --- messageReports/{reportId} ---
+// Reports of club chat messages (see services/reports.js). Any approved
+// member of the club can file one about that club's chat - and only as
+// themselves, always starting 'open'. Only Staff can read them or
+// change their status, and nobody can delete one, so the review trail
+// can't be erased.
+match /messageReports/{reportId} {
+// The real chat message this report points at - used below to check
+// the report's snapshot against it.
+function realMessage(clubId, messageId) {
+return get(/databases/$(database)/documents/clubs/$(clubId)/messages/$(messageId)).data;
+}
+
+allow create: if isSignedIn() &&
+request.resource.data.reporterUid == request.auth.uid &&
+request.resource.data.status == 'open' &&
+exists(/databases/$(database)/documents/clubs/$(request.resource.data.clubId)/members/$(request.auth.uid)) &&
+membershipOf(request.resource.data.clubId, request.auth.uid).status == 'approved' &&
+// The snapshot must match the real message - a report can't be
+// used to put invented words in someone else's mouth.
+realMessage(request.resource.data.clubId, request.resource.data.messageId).text
+== request.resource.data.messageText &&
+realMessage(request.resource.data.clubId, request.resource.data.messageId).authorId
+== request.resource.data.messageAuthorId;
+allow read, update: if isStaff();
+allow delete: if false;
+}
 // --- auditLog/{id} ---
 // Written by every Staff-guarded mutation in services/admin.js and
 // services/clubs.js. Reading the trail is Staff-only (it's meant

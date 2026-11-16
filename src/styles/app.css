@@ -1314,3 +1314,46 @@ html[data-theme="dark"] .category-dot {
   color: var(--muted);
   padding-bottom: 0.5em;
 }
+
+/* --- Sprint 6: reporting a chat message (ClubChat.jsx) --- */
+.club-chat-report-btn { font-size: 0.72rem; padding: 0; margin-top: 0.2em; color: var(--muted); }
+.club-chat-reported { display: block; font-size: 0.72rem; color: var(--muted); margin-top: 0.2em; font-style: italic; }
+.club-chat-report-form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em; margin-top: 0.4em; }
+.club-chat-report-form select { margin: 0; width: auto; font-size: 0.8rem; }
+.club-chat-report-form button { font-size: 0.78rem; padding: 0.3em 0.8em; }
+.club-chat-notice {
+  margin: 0;
+  padding: 0.5em 1.2em;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+/* --- Sprint 6: Reported Messages panel (AdminDashboard.jsx) --- */
+.report-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1em 1.2em;
+  margin-bottom: 0.8em;
+  color: var(--ink);
+}
+.report-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8em;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.report-card-meta .badge { margin-top: 0; }
+.report-card-quote {
+  margin: 0.7em 0;
+  padding: 0.5em 0.9em;
+  border-left: 3px solid var(--gold);
+  background: rgba(201, 154, 60, 0.08);
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.report-card-people { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.7em; }
