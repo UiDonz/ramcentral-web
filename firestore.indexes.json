@@ -30,8 +30,22 @@
  "fields": [
  { "fieldPath": "uid", "order": "ASCENDING" },
  { "fieldPath": "status", "order": "ASCENDING" }
- ]
+]
+ },
+ {
+   "collectionGroup": "messageReports",
+   "queryScope": "COLLECTION",
+   "fields": [
+     {
+       "fieldPath": "status",
+       "order": "ASCENDING"
+     },
+     {
+       "fieldPath": "createdAt",
+       "order": "DESCENDING"
+     }
+   ]
  }
  ],
  "fieldOverrides": []
-}
+} 

@@ -700,12 +700,20 @@ export default function ClubDetail() {
         </section>
       )}
 
-      {isApprovedMember && (
-        <section className="detail-section">
-          <h2>Club Chat</h2>
-          <ClubChat clubId={clubId} uid={currentUser.uid} name={profile?.name} />
-        </section>
-      )}
-    </div>
+
+{isApprovedMember && (
+  <section className="detail-section">
+    <h2>Club Chat</h2>
+
+    <ClubChat
+      clubId={clubId}
+      clubName={club.name}
+      uid={currentUser.uid}
+      name={profile?.name}
+    />
+  </section>
+)}
+</div>
+
   );
 }
