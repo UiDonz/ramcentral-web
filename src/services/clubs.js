@@ -19,7 +19,7 @@ import {
 import { db } from '../firebase';
 import { assertPermission, canAssignRole, isStaff, CLUB_ROLE_LABELS } from './rbac';
 import { logAudit } from './admin';
-
+import { FARMINGDALE_CLUBS, normalizeClubName } from '../data/farmingdaleClubs';
 const clubsCol = collection(db, 'clubs');
 
 export function listenToClubs(callback) {
@@ -67,7 +67,44 @@ export async function createClub({
 
   return clubRef.id;
 }
-
+// Staff-only one-click import of the whole Farmingdale club list
+// (data/farmingdaleClubs.js) as ACTIVE clubs, so the directory isn't empty.
+// Safe to run more than once: any club whose name already matches an
+// existing club (any status, case/punctuation ignored) is skipped. Imported
+// clubs start with 0 members and no officers - students join them like any
+// other club, and `imported: true` marks them so Staff can tell them apart.
+// Writes one doc per club, so it's a few dozen writes, well inside the free tier.
+export async function importCampusClubs(actor) {
+  assertPermission(isStaff(actor), '403 Forbidden: only Staff can import the campus club list.');
+  const existing = await getAllClubsOnce();
+  const taken = new Set(existing.map((c) => normalizeClubName(c.name)));
+  let created = 0;
+  for (const club of FARMINGDALE_CLUBS) {
+    if (taken.has(normalizeClubName(club.name))) continue;
+    await addDoc(clubsCol, {
+      name: club.name,
+      description: 'Official Farmingdale student organization. Meeting times and contact info coming soon.',
+      category: club.category,
+      meetingTimes: '',
+      contactInfo: '',
+      requiresApproval: false,
+      status: 'active',
+      memberCount: 0,
+      chatEnabled: true,
+      imported: true,
+      createdAt: serverTimestamp()
+    });
+    created += 1;
+  }
+  await logAudit({
+    actor,
+    action: 'import_campus_clubs',
+    target: `${created} clubs`,
+    targetType: 'club',
+    details: `${FARMINGDALE_CLUBS.length - created} already existed`
+  });
+  return { created, skipped: FARMINGDALE_CLUBS.length - created };
+}
 export function listenToMembers(clubId, callback) {
   const membersCol = collection(db, 'clubs', clubId, 'members');
   return onSnapshot(membersCol, (snap) => {

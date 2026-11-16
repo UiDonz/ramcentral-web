@@ -1357,6 +1357,7 @@ html[data-theme="dark"] .category-dot {
   word-break: break-word;
 }
 .report-card-people { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.7em; }
+
 /* --- Sprint 6: Clubs page tabs + All Farmingdale clubs (CampusDirectory.jsx) --- */
 .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 1em 0 0.6em; flex-wrap: wrap; }
 button.tab-btn {
@@ -1425,3 +1426,34 @@ button.tab-btn.selected { color: var(--ink); border-bottom-color: var(--gold); }
 }
 .major-suggestions button:hover { background: rgba(201, 154, 60, 0.18); }
 .major-none { padding: 0.5em 0.7em; font-size: 0.85rem; color: var(--muted); font-style: italic; }
+
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+
+/* --- Sprint 6: Command Center readability + scrollable club list --- */
+/* Same idea as the News page's panels: an opaque, rounded surface so text
+   never sits directly on a user's background photo. */
+.admin-page .detail-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1.1em 1.4em 1.3em;
+  margin-top: 1.2em;
+}
+/* The Master Club Directory table scrolls inside this box; the header row
+   stays pinned while you scroll. */
+.admin-table-scroll {
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-top: 0.8em;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+}
+.admin-table-scroll .admin-table { margin-top: 0; }
+.admin-table-scroll .admin-table th {
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  z-index: 1;
+}

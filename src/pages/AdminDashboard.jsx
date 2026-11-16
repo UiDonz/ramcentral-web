@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -10,7 +9,8 @@ import {
   denyClubApplication,
   archiveClub,
   unarchiveClub,
-  recomputeMajorStats
+  recomputeMajorStats,
+  importCampusClubs
 } from '../services/clubs';
 
 import {
@@ -73,6 +73,8 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
   const [budgetInput, setBudgetInput] = useState('');
   const [statsMessage, setStatsMessage] = useState('');
+  const [importMessage, setImportMessage] = useState('');
+  const [confirmImport, setConfirmImport] = useState(false);
 
   useEffect(() => listenToAllClubsForStaff(setAllClubs), []);
   useEffect(() => listenToPendingClubs(setPendingClubs), []);
@@ -123,6 +125,19 @@ export default function AdminDashboard() {
           setStatsMessage('');
           setError(err.message);
       }
+  }
+
+  async function handleImportClubs() {
+    setError(null);
+    setConfirmImport(false);
+    setImportMessage('Importing...');
+    try {
+      const { created, skipped } = await importCampusClubs(actor);
+      setImportMessage(`Done - added ${created} clubs (${skipped} already existed).`);
+    } catch (err) {
+      setImportMessage('');
+      setError(err.message);
+    }
   }
 
   const pendingApprovalsTotal =
@@ -331,10 +346,31 @@ export default function AdminDashboard() {
              <button type="button" className="secondary" onClick={handleRecomputeMajorStats}>
                Recompute major stats
              </button>
-             {statsMessage && <span className="badge">{statsMessage}</span>}
-           </div>
+                       {statsMessage && <span className="badge">{statsMessage}</span>}
+        </div>
 
-           <table>
+        {/* Adds every club on the Farmingdale list that isn't already here
+            as an active, officer-less club. Two clicks (button, then
+            confirm) because it creates dozens of documents. */}
+        <div className="form-actions" style={{ marginBottom: '0.8em' }}>
+          {!confirmImport ? (
+            <button type="button" className="secondary" onClick={() => setConfirmImport(true)}>
+              Import Farmingdale club list
+            </button>
+          ) : (
+            <>
+              <button type="button" onClick={handleImportClubs}>Yes, add all missing clubs</button>
+              <button type="button" className="secondary" onClick={() => setConfirmImport(false)}>
+                Cancel
+              </button>
+            </>
+          )}
+          {importMessage && <span className="badge">{importMessage}</span>}
+        </div>
+
+           {/* Scrolls inside its own box so 60+ clubs don't make the page endless. */}
+        <div className="admin-table-scroll">
+        <table className="admin-table">
           <thead>
             <tr>
               <th>Name</th>
@@ -345,7 +381,7 @@ export default function AdminDashboard() {
           </thead>
 
           <tbody>
-            {allClubs.map((c) => (
+            {[...allClubs].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((c) => (
               <tr key={c.id}>
                 <td>{c.name}</td>
                 <td>{c.status}</td>
@@ -385,6 +421,7 @@ export default function AdminDashboard() {
             )}
           </tbody>
         </table>
+        </div>
       </section>
 
       {/* Audit Trail */}
@@ -394,7 +431,8 @@ export default function AdminDashboard() {
         {auditLog.length === 0 ? (
           <p>No administrative actions logged yet.</p>
         ) : (
-          <table>
+          <div className="admin-table-scroll">
+          <table className="admin-table">
             <thead>
               <tr>
                 <th>When</th>
@@ -419,6 +457,7 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
 
