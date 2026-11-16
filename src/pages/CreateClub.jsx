@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { createClub } from '../services/clubs';
 export default function CreateClub() {
 const { currentUser } = useAuth();
 const navigate = useNavigate();
+// The "Add to NewRamCentral" link in the All Farmingdale clubs tab opens
+// this page with ?name=...&category=... so those two fields start filled in.
+const [searchParams] = useSearchParams();
 const [form, setForm] = useState({
-name: '', description: '', category: '', meetingTimes: '', contactInfo: '', requiresApproval:
-false
+name: searchParams.get('name') || '', description: '', category: searchParams.get('category') || '',
+meetingTimes: '', contactInfo: '', requiresApproval: false
 });
 const [submitting, setSubmitting] = useState(false);
 function update(field) {
