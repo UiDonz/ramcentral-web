@@ -53,6 +53,8 @@ import {
 } from '../services/admin';
 import ClubChat from '../components/ClubChat';
 import PastEvents from '../components/PastEvents';
+import { CARD_THEMES, cardThemeClass, cardThemeStyle } from '../data/cardThemes';
+import CardThemeIcon from '../components/CardThemeIcon';
 import { majorBreakdown, formatShare } from '../services/recommendations';
 import { parseTags, SUGGESTED_TAGS } from '../utils/tags';
 // Turns a saved event time into the 'YYYY-MM-DDTHH:mm' text the date picker uses.
@@ -256,19 +258,22 @@ export default function ClubDetail() {
     await updateClub(clubId, {
       tags: parseTags(infoForm.tagsText ?? infoForm.tags),
       description: infoForm.description,
-      meetingTimes: infoForm.meetingTimes,
-      contactInfo: infoForm.contactInfo,
-      requiresApproval: infoForm.requiresApproval
-    });
+ meetingTimes: infoForm.meetingTimes,
+ contactInfo: infoForm.contactInfo,
+ requiresApproval: infoForm.requiresApproval,
+ cardTheme: infoForm.cardTheme || 'default'
+ });
     setClub((c) => ({ ...c, ...infoForm, tags: parseTags(infoForm.tagsText ?? infoForm.tags) }));
     setEditingInfo(false);
   }
-
-  function handleRoleChange(targetUid, newRole) {
-    runGuarded(changeMemberRole, clubId, targetUid, newRole, myMembership);
-  }
-
-  async function handleRequestBudget(e) {
+ function handleRoleChange(targetUid, newRole) {
+ runGuarded(changeMemberRole, clubId, targetUid, newRole, myMembership, {
+ uid: currentUser.uid,
+ name: profile?.name,
+ role: profile?.role
+ });
+ }
+ async function handleRequestBudget(e) {
     e.preventDefault();
     if (!budgetForm.amount) return;
     await runGuarded(requestBudget, {
@@ -401,9 +406,40 @@ export default function ClubDetail() {
             <label className="checkbox-label">
               <input type="checkbox" checked={infoForm.requiresApproval} onChange={(e) => setInfoForm((f) => ({ ...f, requiresApproval: e.target.checked }))} />
               Require officer approval to join
-            </label>
-            <div className="form-actions">
-              <button type="submit">Save</button>
+ </label>
+ {(canManageRoles(myMembership) || isStaffUser) && (
+ <div className="theme-picker">
+ <strong>Club card style</strong>
+ {['Colors', 'Images', 'Pictures'].map((group) => (
+ <div
+ key={group}
+ className="theme-picker-group"
+ role="radiogroup"
+ aria-label={`${group} card backgrounds`}
+ >
+  {CARD_THEMES.filter((t) => t.group === group).map((t) => (
+ <button
+ key={t.id}
+ type="button"
+ role="radio"
+ aria-checked={(infoForm.cardTheme || 'default') === t.id}
+ title={t.label}
+ className={`theme-swatch${cardThemeClass(t.id)}${
+ (infoForm.cardTheme || 'default') === t.id ? ' selected' : ''
+ }`}
+ style={t.id === 'default' ? { background: 'var(--white)' } : cardThemeStyle(t.id)}
+ onClick={() => setInfoForm((f) => ({ ...f, cardTheme: t.id }))}
+ >
+ <CardThemeIcon themeId={t.id} />
+ <span className="theme-swatch-label">{t.label}</span>
+ </button>
+ ))}
+ </div>
+ ))}
+ </div>
+ )}
+ <div className="form-actions">
+ <button type="submit">Save</button>
               <button type="button" className="secondary" onClick={() => setEditingInfo(false)}>Cancel</button>
             </div>
           </form>
@@ -526,11 +562,11 @@ export default function ClubDetail() {
   <PastEvents events={pastEvents} />
   </section>
   <section className="detail-section">
-  <h2>Members ({members.filter((m) => m.status === 'approved').length})</h2>
-  {isOfficer && pendingMembers.length > 0 && (
-          <div>
-            <h3>Pending requests</h3>
-            {pendingMembers.map((m) => (
+ <h2>Members ({members.filter((m) => m.status === 'approved').length})</h2>
+ {(isOfficer || isStaffUser) && pendingMembers.length > 0 && (
+ <div>
+ <h3>Pending requests</h3>
+ {pendingMembers.map((m) => (
               <div key={m.uid} className="member-row">
                 <span>{memberNames[m.uid] || m.uid}</span>
                 <button onClick={() => approveMembership(clubId, m.uid)}>Approve</button>
@@ -545,15 +581,15 @@ export default function ClubDetail() {
             {m.certified && (
               <span className="certified-badge" title="Certified student leader">&#10003; Certified</span>
             )}
-            {/* Only a President/Co-President gets the role dropdown, never on their own row. */}
-            {canManageRoles(myMembership) && m.uid !== currentUser.uid && (
-              <select
-                className="role-select"
-                value={m.role}
-                aria-label={`Change ${memberNames[m.uid] || 'member'}'s role`}
-                onChange={(e) => handleRoleChange(m.uid, e.target.value)}
-              >
-                {CLUB_ROLES.filter((r) => r === m.role || canAssignRole(myMembership, r)).map((r) => (
+            {/* Only a President/Co-President (or Staff) gets the role dropdown, never on their own row. */}
+ {(canManageRoles(myMembership) || isStaffUser) && m.uid !== currentUser.uid && (
+ <select
+ className="role-select"
+ value={m.role}
+ aria-label={`Change ${memberNames[m.uid] || 'member'}'s role`}
+ onChange={(e) => handleRoleChange(m.uid, e.target.value)}
+ >
+ {CLUB_ROLES.filter((r) => r === m.role || isStaffUser || canAssignRole(myMembership, r)).map((r) => (
                   <option key={r} value={r}>{CLUB_ROLE_LABELS[r]}</option>
                 ))}
               </select>

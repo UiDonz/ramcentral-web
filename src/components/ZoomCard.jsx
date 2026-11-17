@@ -19,7 +19,7 @@ const TRANSITION_MS = 320;
 // so the browser has a painted position to animate from (closing does the reverse).
 // Close with the x button, the backdrop, Escape, or a second click on the panel.
 
-export default function ZoomCard({ className = '', preview, expanded, ariaLabel, onOpenChange }) {
+export default function ZoomCard({ className = '', style, preview, expanded, ariaLabel, onOpenChange }) {
 const sourceRef = useRef(null);
 const [phase, setPhase] = useState('closed'); // closed -> opening -> open -> closing -> closed
 const [rect, setRect] = useState(null);
@@ -62,8 +62,9 @@ return (
 <>
 <div
 ref={sourceRef}
-className={className}
-role="button"
+ className={className}
+ style={style}
+ role="button"
 tabIndex={0}
 aria-label={ariaLabel}
 onClick={open}
