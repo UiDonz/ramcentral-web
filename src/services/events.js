@@ -13,8 +13,14 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { CARD_THEMES } from '../data/cardThemes';
 
 const eventsCol = collection(db, 'events');
+
+// Only a real card theme id is saved; anything else (or the plain card) is saved as ''.
+function cleanBackground(id) {
+  return id && id !== 'default' && CARD_THEMES.some((t) => t.id === id) ? id : '';
+}
 
 // Midnight at the start of today. Listing events from here (not from this exact
 // moment) keeps an event made for "now" or earlier today from vanishing at once.
@@ -96,12 +102,13 @@ export function listenToPastClubEvents(clubId, callback, onError) {
  }
  );
 }
-export async function createEvent({ clubId, title, description, location, dateTime, createdBy }) {
+export async function createEvent({ clubId, title, description, location, dateTime, background, createdBy }) {
  await addDoc(eventsCol, {
   clubId,
     title,
     description: description || '',
     location: location || '',
+    background: cleanBackground(background),
     dateTime: new Date(dateTime),
     status: 'published',
     attendeeCount: 0,
@@ -111,11 +118,12 @@ export async function createEvent({ clubId, title, description, location, dateTi
 }
 
 // Edits an existing event; only the fields the edit form shows can change.
-export async function updateEvent(eventId, { title, description, location, dateTime }) {
+export async function updateEvent(eventId, { title, description, location, dateTime, background }) {
   await updateDoc(doc(db, 'events', eventId), {
     title,
     description: description || '',
     location: location || '',
+    background: cleanBackground(background),
     dateTime: new Date(dateTime)
   });
 }
@@ -136,4 +144,4 @@ export async function cancelEvent(eventId) {
 
 export async function cancelRsvp(eventId, uid) {
   await deleteDoc(doc(db, 'events', eventId, 'attendees', uid));
-}
+}

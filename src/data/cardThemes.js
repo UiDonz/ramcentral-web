@@ -96,5 +96,7 @@ export function cardThemeStyle(id) {
 }
 export function cardThemeClass(id) {
  if (isPictureTheme(id)) return ' card-theme card-theme-picture';
- return id && id !== 'default' ? ` card-theme card-theme-${id}` : '';
+ // Ids that aren't a real option (old seed data like 'sunrise') get the plain card,
+ // otherwise the dark theme text would sit on no background and vanish.
+ return id && id !== 'default' && CARD_THEMES.some((t) => t.id === id) ? ` card-theme card-theme-${id}` : '';
 }

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { listenToEventsInRange } from '../services/events';
 import { toDate } from '../utils/semester';
 import Calendar from './Calendar';
+import { cardThemeClass, cardThemeStyle } from '../data/cardThemes';
+import CardThemeIcon from './CardThemeIcon';
 // Calendars key days as 'YYYY-M-D' (month NOT zero-padded).
 function dayKey(d) {
  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -80,7 +82,12 @@ export default function ClubCalendarPanel({ clubs, myClubIds }) {
  <p className="day-panel-empty">No club events on this day.</p>
  )}
  {selectedEvents.map((ev) => (
- <div key={ev.id} className="club-day-event">
+ <div
+ key={ev.id}
+ className={`club-day-event${ev.background ? ` club-day-event-themed${cardThemeClass(ev.background)}` : ''}`}
+ style={ev.background ? cardThemeStyle(ev.background) : undefined}
+ >
+ {ev.background && <CardThemeIcon themeId={ev.background} />}
  <div className="day-bullet-text">
  <strong>{ev.title}</strong>
  </div>

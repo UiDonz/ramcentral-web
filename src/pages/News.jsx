@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import Calendar from '../components/Calendar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ZoomCard from '../components/ZoomCard';
+import CardThemeIcon from '../components/CardThemeIcon';
+import { cardThemeClass, cardThemeStyle } from '../data/cardThemes';
 import { listenToNewsByCategory, listenToAcademicCalendar, getDigest } from '../services/news';
 import { listenToUpcomingEvents } from '../services/events';
 import { listenToClubs } from '../services/clubs';
@@ -87,6 +89,9 @@ function splitDigestIntoBullets(text) {
     .map((s) => s.trim())
     .filter(Boolean);
 
+  // Drop an unfinished last sentence (an older digest was cut off mid-sentence, e.g. "There's an").
+  if (sentences.length > 1 && !/[.!?)"'”’]$/.test(sentences[sentences.length - 1])) sentences.pop();
+
   return sentences.filter((s) => {
     const bare = s.replace(/\*\*/g, '').trim();
     return !(/today at a glance/i.test(bare) && bare.split(/\s+/).length <= 12);
@@ -136,6 +141,7 @@ function buildClubEventItem(ev, clubName, isMine) {
       .filter(Boolean)
       .join(' '),
     clubId: ev.clubId,
+    background: ev.background || '',
     isClubEvent: true,
     isMine,
   };
@@ -149,6 +155,9 @@ function FeedItem({ item, sectionCategory, onZoomChange }) {
       className={`feed-item${item.isClubEvent ? ' feed-item-club' : ''}`}
       ariaLabel={`Read more: ${item.title}`}
       onOpenChange={onZoomChange}
+      // A club event opens on the background its officers picked.
+      panelClassName={cardThemeClass(item.background)}
+      panelStyle={cardThemeStyle(item.background)}
       preview={
         <div className="feed-item-toggle">
           <span className="feed-item-title">
@@ -160,6 +169,7 @@ function FeedItem({ item, sectionCategory, onZoomChange }) {
       }
       expanded={
         <>
+          <CardThemeIcon themeId={item.background} />
           <CategoryTag tag={tag} />
           <h3 className="zoom-panel-title">{item.title}</h3>
           <div className="zoom-panel-meta">{item.date}</div>

@@ -76,13 +76,21 @@ time: ev.extendedProps?.display?.time || '',
 }
 return events;
 }
-async function summarize(prompt) {
+// maxTokens: 200 is plenty for one story's summary; the daily digest lists many
+// things, so it gets more room (200 cut it off mid-sentence, e.g. "There's an").
+async function summarize(prompt, maxTokens = 200) {
 const msg = await anthropic.messages.create({
 model: 'claude-sonnet-4-6',
-max_tokens: 200,
+max_tokens: maxTokens,
 messages: [{ role: 'user', content: prompt }],
 });
-return msg.content.find((b) => b.type === 'text')?.text?.trim() || '';
+let text = msg.content.find((b) => b.type === 'text')?.text?.trim() || '';
+// If it still ran out of room, drop the unfinished last sentence.
+if (msg.stop_reason === 'max_tokens') {
+const lastEnd = Math.max(text.lastIndexOf('.'), text.lastIndexOf('!'), text.lastIndexOf('?'));
+if (lastEnd > 0) text = text.slice(0, lastEnd + 1);
+}
+return text;
 }
 async function run() {
 const [newsItems, calendarEvents] = await Promise.all([fetchNewsRoom(),
@@ -129,7 +137,8 @@ const digestText = await summarize(
 `"here's your overview" since the app already shows one. Today's calendar events: ` +
 `${todaysEvents.map((e) => `${e.title}${e.time ? ` (${e.time})` : ''}`).join('; ') || 'none'}. ` +
 `Recent headlines (not necessarily today): ${todayHeadlines || 'none'}. If there's truly ` +
-`nothing today, just say it's a quiet day - don't pad it out.`
+`nothing today, just say it's a quiet day - don't pad it out.`,
+800
 );
 await db.collection('campusDigest').doc(todayKey).set({
 date: todayKey,

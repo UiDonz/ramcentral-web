@@ -19,7 +19,17 @@ const TRANSITION_MS = 320;
 // so the browser has a painted position to animate from (closing does the reverse).
 // Close with the x button, the backdrop, Escape, or a second click on the panel.
 
-export default function ZoomCard({ className = '', style, preview, expanded, ariaLabel, onOpenChange }) {
+// panelClassName / panelStyle style the opened panel (e.g. a club event's background).
+export default function ZoomCard({
+  className = '',
+  style,
+  preview,
+  expanded,
+  ariaLabel,
+  onOpenChange,
+  panelClassName = '',
+  panelStyle
+}) {
 const sourceRef = useRef(null);
 const [phase, setPhase] = useState('closed'); // closed -> opening -> open -> closing -> closed
 const [rect, setRect] = useState(null);
@@ -82,9 +92,11 @@ rect &&
 createPortal(
 <div className={`zoom-overlay${isOpen ? ' open' : ''}`} onClick={close}>
 <div
-className={`zoom-panel${isOpen ? ' open' : ''}`}
-style={isOpen ? undefined : { top: rect.top, left: rect.left, width: rect.width, height:
-rect.height }}
+className={`zoom-panel${panelClassName}${isOpen ? ' open' : ''}`}
+style={{
+  ...panelStyle,
+  ...(isOpen ? null : { top: rect.top, left: rect.left, width: rect.width, height: rect.height })
+}}
 onClick={close}
 >
 <button type="button" className="zoom-close" onClick={close} aria-label="Close">
