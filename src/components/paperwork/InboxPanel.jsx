@@ -9,16 +9,21 @@ import {
 } from '../../services/clubPaperwork';
 
 import { CLUB_ROLE_LABELS } from '../../services/rbac';
+import { listenToMyReregTasks } from '../../services/reregistration';
+import TermsModal from './TermsModal';
 // Things waiting on YOU, shown at the top of the Clubs page and nowhere else
 // (it renders nothing at all when there's nothing waiting):
 // - "You were listed as a founding member of <club>" invitations (Join / Decline)
 // - "<club> asked you to be their advisor" requests (Accept / Decline)
+// - "Accept your officer terms for <club>'s re-registration" (Read and accept)
 export default function InboxPanel() {
   const { currentUser, profile } = useAuth();
   const [invites, setInvites] = useState([]);
   const [advisorRequests, setAdvisorRequests] = useState([]);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const [reregTasks, setReregTasks] = useState([]);
+  const [termsFor, setTermsFor] = useState(null);
   // firestore.rules match invitations against the signed-in account's email.
   const email = currentUser?.email || profile?.email || '';
   useEffect(() => {
@@ -29,6 +34,10 @@ export default function InboxPanel() {
     if (!currentUser || profile?.role !== 'faculty') return undefined;
     return listenToMyAdvisorRequests(currentUser.uid, setAdvisorRequests);
   }, [currentUser, profile?.role]);
+  useEffect(() => {
+    if (!currentUser) return undefined;
+    return listenToMyReregTasks(currentUser.uid, setReregTasks);
+  }, [currentUser]);
   async function run(id, fn) {
     setError('');
     setBusyId(id);
@@ -39,7 +48,7 @@ export default function InboxPanel() {
     }
     setBusyId(null);
   }
-  if (invites.length === 0 && advisorRequests.length === 0) return null;
+  if (invites.length === 0 && advisorRequests.length === 0 && reregTasks.length === 0) return null;
   return (
     <section className="pw-inbox" aria-label="Waiting for you">
       <h2>Waiting for you</h2>
@@ -101,6 +110,28 @@ export default function InboxPanel() {
           </span>
         </div>
       ))}
+      {reregTasks.map((rr) => (
+        <div key={rr.id} className="pw-inbox-row">
+          <span>
+            <strong>{rr.clubName}</strong> is re-registering for {rr.termLabel}. Accept the {rr.myLabel} Terms
+            and Conditions so the club can renew. <Link to={`/clubs/${rr.clubId}`}>See the club</Link>
+          </span>
+          <span className="form-actions">
+            <button type="button" onClick={() => setTermsFor(rr)}>
+              Read and accept
+            </button>
+          </span>
+        </div>
+      ))}
+      {termsFor && (
+        <TermsModal
+          rr={termsFor}
+          officerKey={termsFor.myKey}
+          actor={{ uid: currentUser.uid, name: profile?.name }}
+          onClose={() => setTermsFor(null)}
+          onError={setError}
+        />
+      )}
     </section>
   );
 }

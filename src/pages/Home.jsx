@@ -26,8 +26,15 @@ export default function Home() {
  // onboarding gate in App.jsx), so recommendations are a student-only
  // feature - they never see that section or the prompt for it.
  const isStudent = profile?.role === 'student';
+ // Until the first answer arrives, counts show "…" instead of a wrong number
+ // (the 62 school clubs without the app-made ones).
+ const [clubsLoaded, setClubsLoaded] = useState(false);
+ const [mineLoaded, setMineLoaded] = useState(false);
  useEffect(() => {
- const unsub = listenToClubs(setClubs);
+ const unsub = listenToClubs((list) => {
+   setClubs(list);
+   setClubsLoaded(true);
+ });
 return unsub;
  }, [currentUser]);
   useEffect(() => {
@@ -40,6 +47,7 @@ return unsub;
     );
     const unsub = onSnapshot(q, (snap) => {
       setMyClubIds(new Set(snap.docs.map((d) => d.ref.parent.parent.id)));
+      setMineLoaded(true);
     });
     return unsub;
   }, [currentUser]);
@@ -193,7 +201,7 @@ return unsub;
  className={`tab-btn${tab === 'mine' ? ' selected' : ''}`}
  onClick={() => setTab('mine')}
  >
- Your clubs <span className="tab-count">{myClubs.length}</span>
+ Your clubs <span className="tab-count">{clubsLoaded && mineLoaded ? myClubs.length : '…'}</span>
  </button>
         <button
           type="button"
@@ -202,14 +210,14 @@ return unsub;
           className={`tab-btn${tab === 'all' ? ' selected' : ''}`}
           onClick={() => setTab('all')}
         >
-          All Farmingdale clubs <span className="tab-count">{allCount}</span>
+          All Farmingdale clubs <span className="tab-count">{clubsLoaded ? allCount : '…'}</span>
         </button>
       </div>
 
       {tab === 'all' && <CampusDirectory liveClubs={clubs} myClubIds={myClubIds} majors={profile?.majors || []} />}
  {tab === 'mine' && (
  <>
- {myClubs.length === 0 && (
+ {clubsLoaded && mineLoaded && myClubs.length === 0 && (
  <p className="empty-state">
  You haven't joined any clubs yet.{' '}
  <button type="button" className="link-button" onClick={() => setTab('all')}>

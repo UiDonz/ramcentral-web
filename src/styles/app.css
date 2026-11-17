@@ -2252,3 +2252,376 @@ html[data-theme="dark"] .zoom-close { color: var(--ink); background: rgba(255, 2
 @media (max-width: 760px) {
   .club-calendar-layout > .club-day-panel { contain: none; max-height: 420px; }
 }
+
+/* Staff review: Executive Board as a table (role, name, email, RAM ID). */
+.pw-board-scroll { overflow-x: auto; margin: 0.4em 0 0.6em; }
+.pw-board-table { border-collapse: collapse; width: 100%; min-width: 460px; font-size: 0.9em; }
+.pw-board-table th,
+.pw-board-table td { text-align: left; padding: 0.35em 0.7em; border-bottom: 1px solid var(--border); }
+.pw-board-table th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+.pw-board-table td:first-child { font-weight: 600; white-space: nowrap; }
+.pw-copy { user-select: all; }
+.pw-roster-grid .pw-sub { user-select: text; }
+
+/* ===== Club page and Command Center tabs, club spending ===== */
+.tab-badge {
+  margin-left: 0.4em;
+  min-width: 1.35em;
+  display: inline-block;
+  text-align: center;
+  font-size: 0.72rem;
+  line-height: 1.35em;
+  padding: 0 6px;
+  border-radius: 20px;
+  background: var(--danger);
+  color: #fff;
+}
+.spend-row {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8em 1em;
+  margin: 0.6em 0;
+  background: var(--white);
+}
+.spend-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8em;
+  flex-wrap: wrap;
+}
+.spend-summary {
+  min-width: 0;
+}
+.spend-meta {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 0.15em;
+}
+.spend-note {
+  font-size: 0.88rem;
+  margin: 0.5em 0 0;
+}
+.spend-note.bad {
+  color: var(--danger);
+}
+.spend-receipts {
+  display: flex;
+  gap: 0.8em;
+  flex-wrap: wrap;
+  margin-top: 0.5em;
+}
+.alloc-edit {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.alloc-edit input {
+  width: 5.5em;
+}
+html[data-theme='dark'] .admin-table a,
+html[data-theme='dark'] .admin-table button.link-button,
+html[data-theme='dark'] .report-card a,
+html[data-theme='dark'] .spend-row a,
+html[data-theme='dark'] .spend-receipts button.link-button {
+  color: var(--gold);
+}
+.admin-table a,
+.admin-table button.link-button,
+.report-card-meta a,
+.spend-row a,
+.spend-receipts button.link-button {
+  display: inline-block;
+  padding: 0.25em 0.8em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--forest);
+  font-size: 0.85rem;
+  line-height: 1.3;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.admin-table a:hover,
+.admin-table button.link-button:hover,
+.report-card-meta a:hover,
+.spend-row a:hover,
+.spend-receipts button.link-button:hover {
+  background: rgba(201, 154, 60, 0.18);
+  border-color: var(--gold);
+  color: var(--ink);
+}
+.alloc-edit {
+  gap: 0.4em;
+}
+.alloc-edit input[type='number'] {
+  width: 7.5em;
+  border-radius: 999px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.alloc-edit input[type='number']::-webkit-outer-spin-button,
+.alloc-edit input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.count-chip {
+  display: inline-block;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 1.6em;
+  text-align: center;
+  padding: 0.1em 0.6em;
+  border-radius: 20px;
+  background: rgba(107, 106, 99, 0.18);
+  color: var(--muted);
+  vertical-align: middle;
+}
+.count-chip.hot {
+  background: var(--danger);
+  color: #fff;
+}
+.money-big {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  flex-wrap: wrap;
+  margin: 0.4em 0;
+}
+.money-big-num {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.money-big-of {
+  color: var(--muted);
+}
+.meter {
+  display: block;
+  height: 10px;
+  border-radius: 10px;
+  background: var(--border);
+  overflow: hidden;
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 10px;
+  background: var(--forest-light);
+}
+html[data-theme='dark'] .meter > span {
+  background: var(--gold);
+}
+.meter.thin {
+  height: 8px;
+}
+.cat-bars {
+  display: grid;
+  gap: 0.5em;
+  margin-top: 1em;
+}
+.cat-bar {
+  display: grid;
+  grid-template-columns: 5.5em 1fr auto;
+  gap: 0.8em;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.cat-of {
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+.waiting-row,
+.expense-row {
+  padding: 0.8em 0;
+  border-top: 1px solid var(--border);
+}
+.waiting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  flex-wrap: wrap;
+}
+.waiting-text {
+  min-width: 0;
+}
+.waiting-action {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.waiting-action input[type='text'],
+.waiting-action input:not([type]) {
+  min-width: 14em;
+}
+.money-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8em;
+}
+.seg-bar {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin-top: 0.7em;
+}
+.seg-bar span {
+  height: 5px;
+  border-radius: 5px;
+  background: var(--border);
+}
+.seg-bar span.on {
+  background: var(--forest-light);
+}
+html[data-theme='dark'] .seg-bar span.on {
+  background: var(--gold);
+}
+.overview-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1em;
+  align-items: start;
+}
+.overview-grid > .detail-section {
+  margin: 0;
+}
+.attention-item {
+  padding: 0.8em 0;
+  border-top: 1px solid var(--border);
+}
+.attention-item:first-of-type {
+  border-top: none;
+}
+.attention-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  flex-wrap: wrap;
+  font-weight: 600;
+}
+.kind-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1em 0.7em;
+  border-radius: 20px;
+  background: rgba(47, 89, 65, 0.16);
+  color: var(--forest);
+}
+html[data-theme='dark'] .kind-chip {
+  background: rgba(201, 154, 60, 0.18);
+  color: var(--gold);
+}
+.activity-item {
+  padding: 0.55em 0;
+  border-top: 1px solid var(--border);
+}
+.activity-item:first-of-type {
+  border-top: none;
+}
+@media (max-width: 720px) {
+  .overview-grid,
+  .money-form-row {
+    grid-template-columns: 1fr;
+  }
+  .cat-bar {
+    grid-template-columns: 4.5em 1fr;
+  }
+  .cat-of {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}
+.rule-list {
+  margin: 0.3em 0 0.5em;
+  padding-left: 1.2em;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+.rule-list li {
+  margin: 0.2em 0;
+}
+.rule-box {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7em 0.9em;
+  margin: 0.6em 0;
+  font-size: 0.9rem;
+}
+
+/* Tabs (club page, Command Center, Clubs page): text tabs on a solid strip so
+   they read over a background photo, gold underline on the selected one, and an
+   orange count bubble. */
+.tab-bar {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0 0.5em;
+  gap: 2px;
+}
+button.tab-btn { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.75em 0.95em; }
+button.tab-btn.selected { font-weight: 600; }
+.tab-badge { margin-left: 0; background: #c2410c; font-weight: 600; }
+
+/* Command Center > Finance > Yearly amounts search */
+.allocation-search { display: flex; align-items: center; gap: 0.8em; flex-wrap: wrap; margin: 0.4em 0 0.7em; }
+.allocation-search .search-input { flex: 1; max-width: 360px; margin: 0; }
+.allocation-search-count { font-size: 0.85rem; color: var(--muted); }
+
+/* Action links that sit in a row of buttons (Replace, Template, Edit, Choose,
+   Edit club info, Certify, Show list...) are outlined bubbles like the buttons
+   next to them. Links inside a sentence stay plain links. */
+:is(.pw-list-actions, .pw-inline-actions, .pw-modal-actions, .form-actions, .member-row, .pw-review-body, .dir-actions, .zoom-panel-actions, .filter-panel-head) button.link-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38em 0.95em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: transparent;
+  line-height: 1.3;
+}
+:is(.pw-list-actions, .pw-inline-actions, .pw-modal-actions, .form-actions, .member-row, .pw-review-body, .dir-actions, .zoom-panel-actions, .filter-panel-head) button.link-button:hover {
+  border-color: var(--gold);
+  background: rgba(201, 154, 60, 0.12);
+  color: var(--ink);
+}
+:is(.pw-list-actions, .form-actions, .member-row) { align-items: center; }
+
+/* Re-registration card (Paperwork tab) */
+.rr-card { display: flex; flex-direction: column; gap: 0.6em; }
+.rr-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6em; flex-wrap: wrap; }
+.rr-fields { display: flex; flex-direction: column; gap: 0.9em; margin-top: 0.4em; }
+.rr-field { display: flex; flex-direction: column; gap: 0.3em; }
+.rr-field .checkbox-label { margin: 0; }
+.rr-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+.rr-two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6em; }
+@media (max-width: 560px) { .rr-two { grid-template-columns: 1fr; } }
+.rr-problems { margin: 0; padding-left: 1.2em; font-size: 0.85rem; color: var(--danger); }
+.pw-inline-actions { display: flex; gap: 0.5em; flex-wrap: wrap; align-items: center; }
+
+/* Two-step "Leave club" confirmation on the club page */
+.leave-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  flex-wrap: wrap;
+  background: var(--white);
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  padding: 0.6em 0.9em;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+button.danger-button { background: var(--danger); color: #fff; }
+button.danger-button:hover { background: var(--danger); filter: brightness(1.1); }

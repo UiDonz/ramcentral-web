@@ -13,7 +13,9 @@ export const DEFAULT_SETTINGS = {
   // backgroundMode: 'off' (default), 'static' (one photo) or 'fade' (rotates a chosen set).
   backgroundMode: 'off',
   backgroundStaticImageId: null,
-  backgroundFadeImageIds: []
+  backgroundFadeImageIds: [],
+  // Club calendar on the Clubs page: also show events from clubs you haven't joined.
+  calendarAllClubs: false
 };
 export function mergeSettings(saved) {
   const merged = { ...DEFAULT_SETTINGS, ...(saved || {}) };

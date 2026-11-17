@@ -57,6 +57,8 @@ import PastEvents from '../components/PastEvents';
 import { CARD_THEMES, cardThemeClass, cardThemeStyle } from '../data/cardThemes';
 import CardThemeIcon from '../components/CardThemeIcon';
 import EventBackgroundPicker from '../components/EventBackgroundPicker';
+import ClubMoneyPanel from '../components/money/ClubMoneyPanel';
+import { listenToClubSpend, clubActionNeeded } from '../services/clubMoney';
 import { majorBreakdown, formatShare } from '../services/recommendations';
 import { parseTags, SUGGESTED_TAGS } from '../utils/tags';
 import { rankOf } from '../services/rbac';
@@ -78,15 +80,18 @@ export default function ClubDetail() {
   const [pastEvents, setPastEvents] = useState([]);
   const [announcementForm, setAnnouncementForm] = useState({ title: '', body: '' });
   const [eventForm, setEventForm] = useState({ title: '', description: '', location: '', dateTime: '', background: '' });
+  const [tab, setTab] = useState('overview');
+  const [spend, setSpend] = useState([]);
   const [editingEvent, setEditingEvent] = useState(null); // { id, title, description, location, dateTime, background }
   const [editingInfo, setEditingInfo] = useState(false);
   const [infoForm, setInfoForm] = useState(null);
   const [memberNames, setMemberNames] = useState({});
   const [rbacError, setRbacError] = useState(null);
+  const [confirmLeave, setConfirmLeave] = useState(false); // two-step Leave so nobody leaves by accident
   const [eventsLoadError, setEventsLoadError] = useState(null);
   const [eventMessage, setEventMessage] = useState(null); // { type: 'error' | 'ok', text }
   const [budgetRequests, setBudgetRequests] = useState([]);
-  const [membersOpen, setMembersOpen] = useState(false); // Members list starts collapsed
+  const [membersOpen, setMembersOpen] = useState(true); // Members has its own tab now, so it starts open
   const [expenses, setExpenses] = useState([]);
   const [budgetForm, setBudgetForm] = useState({ amount: '', reason: '' });
   const [expenseForm, setExpenseForm] = useState({ amount: '', description: '' });
@@ -156,6 +161,16 @@ export default function ClubDetail() {
   // Room & Logistics panel: President, Co-President and Vice President only.
   const canLogistics = canManageLogistics(myMembership?.role);
 
+  // The Finances tab is for the club's finance officers and Staff (Staff can only view).
+  const showFinance = canFinance || isStaffUser;
+  useEffect(() => {
+    if (!showFinance) {
+      setSpend([]);
+      return undefined;
+    }
+    return listenToClubSpend(clubId, setSpend);
+  }, [clubId, showFinance]);
+
   // Only subscribe when the user has access; firestore.rules would reject the read anyway.
   useEffect(() => {
     if (!canFinance) {
@@ -189,7 +204,30 @@ export default function ClubDetail() {
     }
   }
 
+  // Leaving: a pending request cancels straight away; an approved member
+  // confirms first, and the club's last President/Co-President can't leave
+  // until someone else holds that role (or the club would have no leader).
+  function lastLeader() {
+    if (!myMembership || !['president', 'co_president'].includes(myMembership.role)) return false;
+    return !members.some(
+      (m) => m.uid !== currentUser.uid && m.status === 'approved' && ['president', 'co_president'].includes(m.role)
+    );
+  }
+  function handleLeaveClick() {
+    setRbacError(null);
+    if (myMembership?.status === 'pending') return handleJoinLeave();
+    if (lastLeader()) {
+      setRbacError(
+        `You're the club's only ${CLUB_ROLE_LABELS[myMembership.role]}. Make another member President on the Members tab first, or ask Staff.`
+      );
+      return undefined;
+    }
+    setConfirmLeave(true);
+    return undefined;
+  }
+
   async function handleJoinLeave() {
+    setConfirmLeave(false);
     if (myMembership) {
       await leaveClub(clubId, currentUser.uid, myMembership.status === 'approved');
         setMyMembership(null);
@@ -332,6 +370,20 @@ export default function ClubDetail() {
   }
 
   if (!club) return <div className="page">Loading club...</div>;
+  // Members and Chat are for the club's own members (Staff can see Members);
+  // Finances and Paperwork are for officers and Staff.
+  const canSeeMembers = isApprovedMember || isStaffUser;
+  const showPaperwork = isOfficer || isStaffUser;
+  const waitingCount = canFinance ? spend.filter(clubActionNeeded).length : 0;
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'events', label: 'Events' },
+    canSeeMembers && { id: 'members', label: 'Members', badge: isOfficer || isStaffUser ? pendingMembers.length : 0 },
+    isApprovedMember && { id: 'chat', label: 'Chat' },
+    showFinance && { id: 'finances', label: 'Finances', badge: waitingCount },
+    showPaperwork && { id: 'paperwork', label: 'Paperwork' }
+  ].filter(Boolean);
+  const activeTab = tabs.some((t) => t.id === tab) ? tab : 'overview';
   const staffActor = { uid: currentUser?.uid, name: profile?.name, role: profile?.role };
 
   return (
@@ -364,8 +416,21 @@ export default function ClubDetail() {
           <h1>{club.name}</h1>
           <p className="club-card-category">{club.category} &middot; {club.memberCount} members</p>
         </div>
-        {isApprovedMember || myMembership?.status === 'pending' ? (
-          <button className="secondary" onClick={handleJoinLeave}>
+        {(isApprovedMember || myMembership?.status === 'pending') && confirmLeave ? (
+          <div className="leave-confirm" role="alert">
+            <span>
+              Leave {club.name}?
+              {isOfficer ? ` You'll lose your ${CLUB_ROLE_LABELS[myMembership.role] || 'officer'} role.` : ''}
+            </span>
+            <button type="button" className="danger-button" onClick={handleJoinLeave}>
+              Yes, leave
+            </button>
+            <button type="button" className="secondary" onClick={() => setConfirmLeave(false)}>
+              Cancel
+            </button>
+          </div>
+        ) : isApprovedMember || myMembership?.status === 'pending' ? (
+          <button className="secondary" onClick={handleLeaveClick}>
             {myMembership.status === 'pending' ? 'Cancel request' : 'Leave club'}
           </button>
         ) : (
@@ -373,6 +438,23 @@ export default function ClubDetail() {
         )}
       </div>
 
+      <div className="tab-bar" role="tablist" aria-label="Club sections">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === t.id}
+            className={`tab-btn${activeTab === t.id ? ' selected' : ''}`}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+            {t.badge > 0 && <span className="tab-badge" aria-label={`${t.badge} waiting`}>{t.badge}</span>}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'overview' && (<>
       <section className="detail-section">
         <h2>About</h2>
         {!editingInfo ? (
@@ -485,9 +567,11 @@ export default function ClubDetail() {
             <p>{a.body}</p>
           </div>
         ))}
-      </section>
+        </section>
+        </>)}
 
-      <section className="detail-section">
+        {activeTab === 'events' && (<>
+        <section className="detail-section">
         <h2>Events</h2>
         {isOfficer && (
           // Collapsed by default so the events list isn't pushed down by the form.
@@ -594,8 +678,11 @@ export default function ClubDetail() {
   <section className="detail-section">
   <PastEvents events={pastEvents} />
   </section>
+  </>)}
+
+  {activeTab === 'members' && canSeeMembers && (<>
   <section className="detail-section">
- <h2>Members ({members.filter((m) => m.status === 'approved').length})</h2>
+        <h2>Members ({members.filter((m) => m.status === 'approved').length})</h2>
  <button
    type="button"
    className="members-toggle"
@@ -655,10 +742,11 @@ export default function ClubDetail() {
          ))}
        </>)}
        </section>
+       </>)}
 
        {/* Official paperwork, officer trainings, re-registration and trips. Only this club's officers and Staff
            see it, and firestore.rules block the reads for everyone else. */}
-       {(isOfficer || isStaffUser) && (
+       {activeTab === 'paperwork' && showPaperwork && (
          <ClubPaperworkPanel
            clubId={clubId}
            club={club}
@@ -675,9 +763,20 @@ export default function ClubDetail() {
 
       {/* Club Finances: only the Treasurer, President and Co-President see it; other roles' reads are also rejected in firestore.rules. */}
 
-      {canFinance && (
+      {activeTab === 'finances' && showFinance && (
+        <ClubMoneyPanel
+          club={club}
+          clubId={clubId}
+          spend={spend}
+          myMembership={myMembership}
+          actor={{ uid: currentUser.uid, name: profile?.name, role: profile?.role }}
+          isStaffUser={isStaffUser}
+        />
+      )}
+
+      {activeTab === 'finances' && canFinance && (
         <section className="detail-section">
-          <h2>Club Finances</h2>
+          <h2>Extra funds &amp; expense log</h2>
           <div className="stat-tile-row">
             <div className="stat-tile">
               <div className="stat-tile-value">${(club.budgetReceived || 0).toLocaleString()}</div>
@@ -766,7 +865,7 @@ export default function ClubDetail() {
 
       {/* Room & Logistics: President, Co-President and Vice President only. */}
 
-      {canLogistics && (
+      {activeTab === 'paperwork' && canLogistics && (
         <section className="detail-section">
           <h2>Room &amp; Logistics</h2>
           <form onSubmit={handleRequestRoom} className="inline-form">
@@ -807,7 +906,7 @@ export default function ClubDetail() {
       )}
 
 
-{isApprovedMember && (
+{activeTab === 'chat' && isApprovedMember && (
   <section className="detail-section">
     <h2>Club Chat</h2>
 

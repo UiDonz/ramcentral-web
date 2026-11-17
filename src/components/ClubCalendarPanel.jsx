@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { listenToEventsInRange } from '../services/events';
 import { toDate } from '../utils/semester';
 import Calendar from './Calendar';
+import { useSettings } from '../context/SettingsContext';
 import { cardThemeClass, cardThemeStyle } from '../data/cardThemes';
 import CardThemeIcon from './CardThemeIcon';
 // Calendars key days as 'YYYY-M-D' (month NOT zero-padded).
@@ -25,7 +26,11 @@ export default function ClubCalendarPanel({ clubs, myClubIds }) {
  return { year: now.getFullYear(), month: now.getMonth() };
  });
  const [rawEvents, setRawEvents] = useState([]);
- const [allClubs, setAllClubs] = useState(false);
+ // Saved with the user's settings, so the checkbox stays the way they left it
+ // on every visit and device.
+ const { settings, updateSettings } = useSettings();
+ const allClubs = !!settings.calendarAllClubs;
+ const setAllClubs = (on) => updateSettings({ calendarAllClubs: on });
  const [selected, setSelected] = useState(null); // { key, label }
  const [error, setError] = useState(null);
  const clubNames = useMemo(() => {
