@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import Home from './pages/Home';
 import ClubDetail from './pages/ClubDetail';
 import CreateClub from './pages/CreateClub';
+import RequestTrip from './pages/RequestTrip';
 import Events from './pages/Events';
 import Profile from './pages/Profile';
 import News from './pages/News';
@@ -54,11 +55,55 @@ function AppShell() {
       <Sidebar />
       <div className="app-main">
         <Routes>
-          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/clubs/:clubId" element={<ProtectedRoute><ClubDetail /></ProtectedRoute>} />
- <Route path="/create-club" element={<ProtectedRoute><CreateClub /></ProtectedRoute>} />
- <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
- <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+
+             <Route
+               path="/"
+               element={
+                 <ProtectedRoute>
+                    <Home />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/clubs/:clubId"
+               element={
+                 <ProtectedRoute>
+                    <ClubDetail />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/clubs/:clubId/trip"
+               element={
+                 <ProtectedRoute>
+                    <RequestTrip />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/create-club"
+               element={
+                 <ProtectedRoute>
+                    <CreateClub />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/events"
+               element={
+                 <ProtectedRoute>
+                    <Events />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/news"
+               element={
+                 <ProtectedRoute>
+                    <News />
+                 </ProtectedRoute>
+               }
+             />
  <Route path="/welcome" element={<Navigate to="/" replace />} />
  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             {/* Appearance (theme/accent/font size) + Home layout reorder -
@@ -91,4 +136,4 @@ export default function App() {
       </BrowserRouter>
     </ErrorBoundary>
   );
-}
+}

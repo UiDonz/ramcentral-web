@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 
 export default function Navbar() {
   const { currentUser, profile, logout } = useAuth();
@@ -12,7 +13,7 @@ export default function Navbar() {
 
   return (
     <header className="navbar">
-      <Link to="/" className="navbar-brand">NewRamCentral</Link>
+      <Link to="/" className="navbar-brand"><Logo size={30} /> RamConnect</Link>
       {currentUser && (
         <nav className="navbar-links">
           <Link to="/">Clubs</Link>

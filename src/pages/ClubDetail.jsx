@@ -52,6 +52,7 @@ import {
   listenToClubRoomBookings
 } from '../services/admin';
 import ClubChat from '../components/ClubChat';
+import ClubPaperworkPanel from '../components/paperwork/ClubPaperworkPanel';
 import PastEvents from '../components/PastEvents';
 import { CARD_THEMES, cardThemeClass, cardThemeStyle } from '../data/cardThemes';
 import CardThemeIcon from '../components/CardThemeIcon';
@@ -607,11 +608,28 @@ export default function ClubDetail() {
             {isStaffUser && isClubOfficerRole(m.role) && (
               <button className="link-button" onClick={() => handleCertifyToggle(m)}>
                 {m.certified ? 'Revoke certification' : 'Certify'}
-              </button>
-            )}
-          </div>
-        ))}
-      </section>
+               </button>
+             )}
+           </div>
+         ))}
+       </section>
+
+       {/* Official paperwork, officer trainings, re-registration and trips. Only this club's officers and Staff
+           see it, and firestore.rules block the reads for everyone else. */}
+       {(isOfficer || isStaffUser) && (
+         <ClubPaperworkPanel
+           clubId={clubId}
+           club={club}
+           members={members}
+           memberNames={memberNames}
+           myMembership={myMembership}
+           currentUser={currentUser}
+           profile={profile}
+           isStaffUser={isStaffUser}
+           isOfficer={isOfficer}
+           actor={{ uid: currentUser.uid, name: profile?.name, email: profile?.email, role: profile?.role }}
+         />
+       )}
 
       {/* Club Finances: only the Treasurer, President and Co-President see it; other roles' reads are also rejected in firestore.rules. */}
 
@@ -762,4 +780,4 @@ export default function ClubDetail() {
 </div>
 
   );
-}
+}

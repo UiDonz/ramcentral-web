@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Users, CalendarDays, Newspaper, Plus, LogOut, ShieldCheck, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isStaff } from '../services/rbac';
+import Logo from './Logo';
 const LINKS = [
  { to: '/', label: 'Clubs', Icon: Users, end: true },
  { to: '/events', label: 'Events', Icon: CalendarDays },
@@ -33,7 +34,7 @@ export default function Sidebar() {
            focus-within keeps it reachable by keyboard. */}
       <div className="sidebar-hover-zone" aria-hidden="true" />
       <nav className="sidebar" aria-label="Main navigation">
-        <NavLink to="/" className="sidebar-brand" aria-label="NewRamCentral home">R</NavLink>
+        <NavLink to="/" className="sidebar-brand" aria-label="RamConnect home"><Logo size={44} /></NavLink>
 
         <div className="sidebar-links">
           {LINKS.map(({ to, label, Icon, end }) => (
