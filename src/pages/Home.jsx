@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { collectionGroup, query, where, onSnapshot } from 'firebase/firestore';
+import { collectionGroup, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { listenToClubs } from '../services/clubs';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ import { useSettings } from '../context/SettingsContext';
 import ClubCard from '../components/ClubCard';
 import CampusDirectory from '../components/CampusDirectory';
 import ClubCalendarPanel from '../components/ClubCalendarPanel';
+import InboxPanel from '../components/paperwork/InboxPanel';
 import { FARMINGDALE_CLUBS } from '../data/farmingdaleClubs';
 import { recommendClubs } from '../services/recommendations';
 // Second import from the same file (kept apart so the line above stays exactly as the Sprint 7 plan expects it).
@@ -47,6 +48,30 @@ return unsub;
    const onList = new Set(FARMINGDALE_CLUBS.map((c) => normalizeClubName(c.name)));
    return FARMINGDALE_CLUBS.length + clubs.filter((c) => !onList.has(normalizeClubName(c.name))).length;
  }, [clubs]);
+ // Clubs you started that Staff haven't approved yet. They aren't in `clubs` (active only), but you're their
+ // approved president, so their ids are in myClubIds - look those up one by one.
+ const [pendingMine, setPendingMine] = useState([]);
+ useEffect(() => {
+   const activeIds = new Set(clubs.map((c) => c.id));
+   const ids = [...myClubIds].filter((id) => !activeIds.has(id));
+   if (ids.length === 0) {
+     setPendingMine([]);
+     return undefined;
+   }
+   let cancelled = false;
+   Promise.all(ids.map((id) => getDoc(doc(db, 'clubs', id)).catch(() => null))).then((snaps) => {
+     if (cancelled) return;
+     setPendingMine(
+       snaps
+         .filter((snap) => snap && snap.exists() && snap.data().status === 'pending')
+         .map((snap) => ({ id: snap.id, ...snap.data() }))
+         .sort((a, b) => a.name.localeCompare(b.name))
+     );
+   });
+   return () => {
+     cancelled = true;
+   };
+ }, [clubs, myClubIds]);
  const myClubs = useMemo(
  () => clubs.filter((c) => myClubIds.has(c.id)).sort((a, b) => a.name.localeCompare(b.name)),
  [clubs, myClubIds]
@@ -105,10 +130,14 @@ return unsub;
     <div className="page">
  <div className="page-header">
  <h1>Clubs</h1>
- </div>
- <div className="tab-bar" role="tablist" aria-label="Club lists">
- <button
- type="button"
+       </div>
+       {/* Invitations and advisor requests waiting on this person (renders
+     nothing when there are none). */}
+       <InboxPanel />
+       <div className="tab-bar" role="tablist" aria-label="Club lists">
+         <button
+
+           type="button"
  role="tab"
  aria-selected={tab === 'mine'}
  className={`tab-btn${tab === 'mine' ? ' selected' : ''}`}
@@ -138,6 +167,23 @@ return unsub;
  </button>
  </p>
  )}
+ {pendingMine.length > 0 && (
+   <section>
+     <h2>Waiting for approval</h2>
+     <div className="club-grid">
+       {pendingMine.map((c) => (
+         <Link key={c.id} to={`/clubs/${c.id}`} className="club-card pending-club-card">
+           <div className="club-card-header">
+             <h3>{c.name}</h3>
+             <span className="tag-chip">Pending</span>
+           </div>
+           <p className="club-card-category">{c.category || 'General'}</p>
+           <p className="pw-sub">Staff will review it soon. Open it to finish your paperwork.</p>
+         </Link>
+       ))}
+     </div>
+   </section>
+ )}
  {settings.homeLayout.map((key) => sections[key] || null)}
  <section>
  <h2>Club calendar</h2>
@@ -147,4 +193,4 @@ return unsub;
  )}
  </div>
   );
-}
+}

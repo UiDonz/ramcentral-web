@@ -1642,3 +1642,159 @@ html[data-theme="dark"] :where(a:not([class]), button.link-button) {
   background: rgba(201, 154, 60, 0.22);
   box-shadow: inset 0 0 0 2px var(--gold), 0 0 0 2px color-mix(in srgb, var(--forest) 55%, #ffffff);
 }
+
+/* ===== Club paperwork (components/paperwork) ===== */
+.pw-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(20, 30, 25,
+  0.55); display: flex; align-items: flex-start; justify-content: center; padding: 4vh 1em;
+overflow-y: auto; }
+.pw-modal {
+  background: var(--white);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 520px;
+  padding: 1.2em 1.4em;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.pw-modal-wide { max-width: 760px; }
+.pw-modal-head
+  { display: flex; justify-content: space-between; align-items: center; gap: 1em; margin-bottom: 0.6em; }
+  .pw-modal-head h2, .pw-modal-head h3 {
+margin: 0; }
+.pw-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.6em;
+  line-height: 1;
+  padding: 0 0.2em;
+  cursor: pointer;
+}
+
+.pw-close:hover { background: none; color: var(--forest); }
+.pw-modal-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7em; margin-top: 1em; }
+.pw-hint, .pw-sub { color: var(--muted); font-size: 0.88em; margin: 0.25em 0; }
+.pw-problem, .pw-bad, .pw-needed { color: var(--danger); font-size: 0.88em; }
+.pw-ok { color: var(--forest); font-size: 0.9em; font-weight: 600; }
+.pw-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,
+  1fr)); gap: 0.6em; align-items: end; } .pw-row-n { color: var(--muted); font-size:
+0.85em; align-self: center; }
+.pw-officer-block
+  { border: 1px solid var(--border); border-radius: 8px; padding: 0.7em 0.8em; margin: 0.6em 0; background: var(--cream); } .pw-roster-scroll { max-height: 46vh; overflow-y:
+auto; padding-right: 0.3em; }
+.pw-inline-actions { display: flex; gap: 0.6em; flex-wrap: wrap; align-items: center; margin: 0.5em 0; }
+.pw-paste textarea { min-height: 90px; }
+.pw-template
+  { border: 1px dashed var(--border); border-radius: 8px; padding: 0.8em; background: var(--cream); margin: 0.6em 0; } .pw-template-title { font-weight: 700; color:
+var(--forest); }
+.pw-template-sub { color: var(--muted); font-size: 0.88em; }
+.pw-required-text { font-size: 0.9em; }
+.pw-advisor-list
+  { max-height: 44vh; overflow-y: auto; margin-top: 0.6em; display: flex; flex-direction: column; gap: 0.4em; } .pw-advisor { display: flex; justify-content: space-between;
+align-items: center; gap: 0.8em; border: 1px solid var(--border); border-radius: 8px; padding: 0.55em
+  0.8em; background: var(--white); text-align: left; color: inherit; cursor: pointer; }
+.pw-advisor:hover { background: var(--cream); }
+.pw-advisor.selected { border-color: var(--forest); background: var(--cream); }
+.pw-checklist { margin: 1.4em 0 1em; }
+.pw-progress { margin: 0.5em 0 0.8em; }
+.pw-progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.pw-progress-bar > div { height: 100%; background: var(--forest); transition: width 0.2s; }
+.pw-card
+  { border: 1px solid var(--border); border-radius: 8px; padding: 0.8em 1em; margin: 0.6em 0; background: var(--white); } .pw-card-head { display: flex; justify-content:
+space-between; align-items: center; gap: 0.6em; }
+.pw-tag
+  { display: inline-block; font-size: 0.72em; font-weight: 600; padding: 0.15em 0.6em; border-radius: 999px; background: var(--cream); color: var(--muted); border: 1px solid
+var(--border); vertical-align: middle; }
+.pw-tag-req { color: var(--danger); border-color: var(--danger); background: transparent; }
+.pw-tag-ok { color: var(--forest); border-color: var(--forest); background: transparent; }
+.pw-tag-private { color: var(--forest); background: var(--cream); margin-left: 0.5em; }
+.pw-done { background: var(--cream); border-radius: 6px; padding: 0.5em 0.7em; margin-top: 0.4em; }
+.pw-file-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6em; }
+.pw-panel h3 { margin-top: 1.2em; }
+.pw-list { display: flex; flex-direction: column; }
+.pw-list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  padding: 0.7em 0;
+  border-bottom: 1px solid var(--border);
+}
+.pw-list-row:last-child { border-bottom: none; }
+.pw-list-row.pw-col { flex-direction: column; align-items: stretch; }
+.pw-list-top { display: flex; justify-content: space-between; align-items: center; gap: 1em; }
+.pw-list-actions { display: flex; align-items: center; gap: 0.6em; flex-wrap: wrap; }
+.pw-officer-table > div {
+  display: grid;
+  grid-template-columns: 130px 1fr 1.6fr;
+  gap: 0.6em;
+  padding: 0.3em 0;
+  font-size: 0.92em;
+  } .pw-role { font-weight: 600;
+  color: var(--forest);
+}
+.pw-roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,
+  1fr)); gap: 0.4em 1em; margin: 0.5em 0; } .pw-roster-grid > div { display: flex;
+flex-direction: column; font-size: 0.9em; }
+.pw-training { overflow-x: auto; }
+.pw-btn-link {
+  display: inline-block;
+  background: var(--forest);
+  color: var(--white);
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.pw-btn-link:hover { background: var(--forest-light); color: var(--white); }
+.pw-note {
+  background: var(--cream);
+  border-left: 3px solid var(--gold);
+  padding: 0.6em 0.8em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  margin: 0.6em 0;
+
+}
+.pw-field-label { font-weight: 600; margin: 0.8em 0 0.3em; }
+.pw-choice-row { display: flex; gap: 0.5em; flex-wrap: wrap; }
+.pw-choice-col { display: flex; flex-direction: column; gap: 0.4em; align-items: stretch; }
+.pw-choice-col button { text-align: left; }
+.pw-review
+  { border: 1px solid var(--border); border-radius: 8px; padding: 0.8em 1em; margin: 0.6em 0; background: var(--white); } .pw-review-head { display: flex;
+justify-content: space-between; align-items: center; gap: 0.8em; flex-wrap: wrap; } .pw-review-body { margin:
+  0.6em 0; display: flex; flex-direction: column; gap: 0.35em;
+font-size: 0.92em; }
+.pw-deny { margin-top: 0.6em; display: flex; flex-direction: column; gap: 0.5em; }
+.pw-inbox
+  { border: 1px solid var(--gold); background: var(--cream); border-radius: 10px; padding: 0.8em 1em; margin: 0 0 1.2em; } .pw-inbox h2 { margin: 0 0 0.4em; font-size:
+1.05em; }
+.pw-inbox-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em 0;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 640px) {
+.pw-officer-table > div { grid-template-columns: 1fr; }
+.pw-list-row, .pw-inbox-row { flex-direction: column; align-items: stretch; }
+}
+
+/* Paperwork text in dark mode: these use the accent color as TEXT, which is nearly invisible on dark cards
+   (especially the violet accent). Use a light tint of the accent instead. */
+html[data-theme="dark"] :is(.pw-role, .pw-ok, .pw-tag-ok, .pw-tag-private, .pw-template-title, .pw-close:hover) {
+  color: color-mix(in srgb, var(--forest) 40%, #ffffff);
+}
+html[data-theme="dark"] .pw-tag-ok { border-color: color-mix(in srgb, var(--forest) 40%, #ffffff); }
+
+/* RamConnect logo mark */
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.sidebar-brand svg { display: block; }
+.sidebar-brand { width: 44px; height: 44px; border-radius: 10px; background: none; padding: 0; }
+.app-logo { display: block; border-radius: 22%; }

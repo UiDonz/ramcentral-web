@@ -24,6 +24,8 @@ import {
   getQuickStats
 } from '../services/admin';
 import { listenToOpenReports, resolveReport } from '../services/reports';
+import { listenToPendingTrips } from '../services/clubPaperwork';
+import { ClubApplicationCard, TripReviewCard } from '../components/paperwork/AdminReview';
 
 function StatTile({ label, value }) {
   return (
@@ -61,6 +63,7 @@ export default function AdminDashboard() {
   const [pendingClubs, setPendingClubs] = useState([]);
   const [pendingBudget, setPendingBudget] = useState([]);
   const [pendingRooms, setPendingRooms] = useState([]);
+  const [pendingTrips, setPendingTrips] = useState([]);
   const [auditLog, setAuditLog] = useState([]);
   const [openReports, setOpenReports] = useState([]);
 
@@ -80,6 +83,7 @@ export default function AdminDashboard() {
   useEffect(() => listenToPendingClubs(setPendingClubs), []);
   useEffect(() => listenToPendingBudgetRequests(setPendingBudget), []);
   useEffect(() => listenToPendingRoomBookings(setPendingRooms), []);
+  useEffect(() => listenToPendingTrips(setPendingTrips), []);
   useEffect(() => listenToAuditLog(setAuditLog), []);
   useEffect(
     () => listenToOpenReports(setOpenReports, () => setError('Could not load message reports.')),
@@ -143,7 +147,8 @@ export default function AdminDashboard() {
   const pendingApprovalsTotal =
     pendingClubs.length +
     pendingBudget.length +
-    pendingRooms.length;
+     pendingRooms.length +
+     pendingTrips.length;
 
   return (
     <div className="admin-dashboard">
@@ -221,31 +226,16 @@ export default function AdminDashboard() {
           <p>Nothing waiting on approval.</p>
         )}
 
-        {/* Pending Club Applications */}
-        {pendingClubs.map((c) => (
-          <div key={c.id} className="queue-item">
-            <p>
-              New club application: <strong>{c.name}</strong>
-              {' '}({c.category || 'General'})
-            </p>
-
-            <button
-              onClick={() =>
-                handle(approveClubApplication, c.id, actor)
-              }
-            >
-              Approve
-            </button>
-
-            <button
-              onClick={() =>
-                handle(denyClubApplication, c.id, actor)
-              }
-            >
-              Deny
-            </button>
-          </div>
-        ))}
+        {/* Each application shows the paperwork the club attached, and
+             Approve/Deny go through services/clubPaperwork.js (which wraps
+             the same approveClubApplication/denyClubApplication as before
+             and adds the roster invitations / denial reason). */}
+         {pendingClubs.map((c) => (
+           <ClubApplicationCard key={c.id} club={c} actor={actor} onError={setError} />
+         ))}
+         {pendingTrips.map((t) => (
+           <TripReviewCard key={t.id} request={t} actor={actor} onError={setError} />
+         ))}
 
         {/* Pending Budget Requests */}
         {pendingBudget.map((r) => (
@@ -463,4 +453,4 @@ export default function AdminDashboard() {
 
     </div>
   );
-}
+}

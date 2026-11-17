@@ -6,7 +6,7 @@ import { majorBreakdown } from '../services/recommendations';
 // The "All Farmingdale clubs" tab on the Clubs page: every club on campus,
 // with search + category + status filters. `liveClubs` is the active clubs
 // from Firestore; a directory entry whose name matches one of them is shown
-// as "On NewRamCentral" with a link to its page, and every other entry gets
+// as "On RamConnect" with a link to its page, and every other entry gets
 // a link that opens Create Club with the name and category pre-filled.
 
 // One row of pill-shaped choices (only one can be picked), used inside the Filters dropdown.
@@ -105,7 +105,7 @@ export default function CampusDirectory({ liveClubs, myClubIds = new Set(), majo
   // How many options inside the Filters dropdown are changed (shown on the button).
   const activeCount = [category !== 'all', size !== 'all', sort !== 'name', joinType !== 'all', membership !== 'all', myMajorOnly].filter(Boolean).length;
 
-  // Clubs that aren't on NewRamCentral yet have no members or join rules, so any of these filters hides them.
+  // Clubs that aren't on RamConnect yet have no members or join rules, so any of these filters hides them.
   const count = (c) => (c.live ? c.live.memberCount || 0 : 0);
   const sizeOk = (c) =>
     size === 'all' ||
@@ -289,7 +289,7 @@ export default function CampusDirectory({ liveClubs, myClubIds = new Set(), majo
               <span className="dir-category">{c.category}</span>
 
               <span className={`dir-pill ${c.live ? 'on' : 'off'}`}>
-                {c.live ? 'On NewRamCentral' : 'Not on NewRamCentral yet'}
+                {c.live ? 'On RamConnect' : 'Not on RamConnect yet'}
               </span>
             </div>
 
@@ -312,7 +312,7 @@ export default function CampusDirectory({ liveClubs, myClubIds = new Set(), majo
                 <Link to={`/clubs/${c.live.id}`}>Open club page &rarr;</Link>
               ) : (
                 <Link to={`/create-club?name=${encodeURIComponent(c.name)}&category=${encodeURIComponent(c.category)}`}>
-                  Add to NewRamCentral &rarr;
+                  Add to RamConnect &rarr;
                 </Link>
               )}
             </div>
@@ -321,7 +321,7 @@ export default function CampusDirectory({ liveClubs, myClubIds = new Set(), majo
       </div>
 
       <p className="dir-legend">
-        Asterisks (*) after a name are copied from the school's list. Clubs not on NewRamCentral yet can be
+        Asterisks (*) after a name are copied from the school's list. Clubs not on RamConnect yet can be
         added by anyone; a new club goes to Staff for approval first.
       </p>
     </div>

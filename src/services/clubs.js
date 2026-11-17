@@ -154,6 +154,29 @@ export async function joinClub(clubId, uid, requiresApproval, majors = []) {
     }
 }
 
+// Joining by accepting a roster invitation (services/clubPaperwork.js): the
+// officers who named this person already vouched for them, so they go
+// straight in as an approved member - with the role the invitation carried
+// (a Core 4 officer, or 'member') - skipping the club's join-approval step.
+// Same counter bookkeeping as joinClub/approveMembership. A person who is
+// already in the club is left exactly as they are.
+
+export async function joinClubFromInvite(clubId, uid, role, majors = []) {
+  const existing = await getDoc(doc(db, 'clubs', clubId, 'members', uid));
+  if (existing.exists() && existing.data().status === 'approved') return;
+  await setDoc(doc(db, 'clubs', clubId, 'members', uid), {
+    uid,
+    role: role || 'member',
+    status: 'approved',
+    joinedAt: serverTimestamp(),
+    fromInvite: true
+  });
+  await updateDoc(doc(db, 'clubs', clubId), {
+    memberCount: increment(1),
+    ...majorCounterUpdates(majors, 1)
+  });
+}
+
 export async function approveMembership(clubId, uid) {
   await updateDoc(doc(db, 'clubs', clubId, 'members', uid), { status: 'approved' });
   const majors = await getUserMajors(uid);
@@ -384,4 +407,4 @@ export async function postAnnouncement(clubId, authorId, title, body) {
 export async function getAllClubsOnce() {
   const snap = await getDocs(clubsCol);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
+}

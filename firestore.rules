@@ -159,6 +159,28 @@ allow read: if isClubFinanceOfficer(clubId) || isStaff();
 allow create: if isClubTreasurer(clubId);
 allow update, delete: if false;
 }
+// --- clubs/{clubId}/paperwork/{docId} ---
+// New-club paperwork: 'application' (executive board, roster, advisor)
+// and 'constitution' (the attached file). Only this club's officers
+// and Staff can read or write it; plain members and other clubs
+// cannot. Never deleted, so the review trail stays.
+match /paperwork/{docId} {
+  allow read, create, update: if isClubOfficer(clubId) || isStaff();
+  allow delete: if false;
+}
+
+// --- clubs/{clubId}/trainings/{uid} ---
+
+// One doc per officer: which trainings they say they finished, and
+// which Staff verified. An officer can mark their OWN trainings but
+// can never touch the 'verified' map - only Staff can.
+match /trainings/{uid} {
+  allow read: if isClubOfficer(clubId) || isStaff();
+  allow create: if isStaff() ||
+  (isSelf(uid) && isClubOfficer(clubId) && !('verified' in request.resource.data)); allow update: if isStaff() ||
+  (isSelf(uid) && isClubOfficer(clubId) &&
+  !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified'])); allow delete: if false;
+}
 }
 // --- events/{eventId} ---
 match /events/{eventId} {
@@ -236,6 +258,58 @@ isClubLogisticsOfficer(resource.data.clubId);
 allow create: if isClubLogisticsOfficer(request.resource.data.clubId);
 allow update: if isStaff();
 allow delete: if false;
+}
+// --- tripRequests/{id} ---
+// Off-campus trip requests with their Expense Authorization Form. Only
+// a club's President / Co-President / Treasurer can file one (it holds
+// club money details, same group as budgetRequests); Staff decide it.
+
+match /tripRequests/{id} {
+  allow read: if isStaff() ||
+  (isSignedIn() && resource.data.requestedBy == request.auth.uid) ||
+  isClubFinanceOfficer(resource.data.clubId);
+  allow create: if isClubFinanceOfficer(request.resource.data.clubId) &&
+  request.resource.data.status == 'pending' &&
+  request.resource.data.requestedBy == request.auth.uid;
+  allow update: if isStaff();
+  allow delete: if false;
+}
+// --- advisorRequests/{id} ---
+// "Please be our advisor" requests; the doc id is the club's id, so a
+// club has at most one. The chosen faculty member can only answer it
+// (status + decidedAt), nothing else.
+match /advisorRequests/{id} {
+  allow read: if isStaff() ||
+  (isSignedIn() && (resource.data.advisorUid == request.auth.uid ||
+  resource.data.requestedBy == request.auth.uid)) ||
+  isClubOfficer(resource.data.clubId);
+  allow create: if isClubOfficer(request.resource.data.clubId) &&
+  request.resource.data.status == 'pending' &&
+  request.resource.data.requestedBy == request.auth.uid &&
+  id == request.resource.data.clubId;
+  allow update: if isStaff() ||
+  (isSignedIn() && resource.data.advisorUid == request.auth.uid &&
+  request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'decidedAt']) &&
+    request.resource.data.status in ['accepted',
+    'declined']);
+  allow delete: if isStaff() || isClubOfficer(resource.data.clubId);
+}
+// --- rosterInvites/{id} ---
+// Created by the approval step (Staff) for each student on an approved
+// club's roster. The invited person (matched by sign-in email) can read
+// theirs and answer it - only status / respondedAt / uid may change.
+match /rosterInvites/{id} {
+  allow read: if isStaff() ||
+  (isSignedIn() && request.auth.token.email != null &&
+  resource.data.email == request.auth.token.email.lower()) ||
+  isClubOfficer(resource.data.clubId);
+  allow create: if isStaff();
+  allow update: if isSignedIn() && request.auth.token.email != null &&
+  resource.data.email == request.auth.token.email.lower() &&
+  request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt', 'uid']) &&
+    request.resource.data.status in ['joined',
+    'declined'];
+  allow delete: if false;
 }
 // --- settings/{id} ---
 match /settings/{id} {
