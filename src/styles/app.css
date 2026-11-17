@@ -1535,3 +1535,110 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
  opacity: 0.95;
  z-index: 0;
 }
+
+/* Filters dropdown on the Clubs directory: pill ("bubble") controls */
+/* The site-wide label rule adds a bottom margin, which lifted the search box above the Filters button. */
+.filter-bar label { margin-bottom: 0; }
+.filter-bar .filter-count { display: flex; align-items: center; height: 2.75rem; padding: 0; }
+.filter-bar .search-input,
+button.filter-menu-btn { height: 2.75rem; box-sizing: border-box; border-radius: 999px; }
+.filter-bar .search-input { padding-left: 1.2em; padding-right: 1.2em; min-width: 260px; }
+.filter-menu { position: relative; }
+button.filter-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  padding: 0 1.2em;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+button.filter-menu-btn:hover,
+button.filter-menu-btn[aria-expanded='true'] { background: var(--white); border-color: var(--forest); }
+.filter-menu-badge {
+  background: var(--forest);
+  color: var(--white);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  min-width: 1.5em;
+  padding: 0.1em 0.5em;
+  text-align: center;
+  line-height: 1.3;
+}
+.filter-panel {
+  position: absolute;
+  top: calc(100% + 0.5em);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  width: min(520px, 90vw);
+  padding: 1.2em 1.3em 1.3em;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.22);
+}
+.filter-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.7em;
+  border-bottom: 1px solid var(--border);
+  font-size: 1rem;
+}
+.chip-group { display: flex; flex-direction: column; gap: 0.45em; }
+.chip-group-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.45em; }
+button.chip {
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.38em 1em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: pointer;
+}
+button.chip:hover { background: var(--white); border-color: var(--forest); }
+button.chip.selected,
+button.chip.selected:hover {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--white);
+}
+.filter-panel-foot { display: flex; justify-content: flex-end; padding-top: 0.2em; }
+.filter-panel-foot button { border-radius: 999px; padding: 0.6em 1.5em; }
+
+/* Dark theme: brighter green. The default --forest (#1c3d2e) is nearly the same color as the dark cards, so links
+   and filled controls disappeared. Only the default (green) accent is changed; ocean / crimson / violet keep theirs. */
+html[data-theme="dark"]:not([data-accent="ocean"]):not([data-accent="crimson"]):not([data-accent="violet"]) {
+  --forest: #2f6b4c;
+  --forest-light: #3f8560;
+}
+/* Plain links and text-style buttons: a light tint of whatever the accent is, so they stay readable on dark cards. */
+html[data-theme="dark"] :where(a:not([class]), button.link-button) {
+  color: color-mix(in srgb, var(--forest) 55%, #ffffff);
+}
+
+/* The day you clicked in a calendar (News page and the Clubs page calendar): a light outline and fill. */
+.calendar-cell.selected {
+  background: color-mix(in srgb, var(--forest) 14%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--forest) 55%, #ffffff);
+  font-weight: 700;
+}
+/* If the clicked day is also today, keep today's gold fill and just add the outline. */
+.calendar-cell.today.selected {
+  background: rgba(201, 154, 60, 0.22);
+  box-shadow: inset 0 0 0 2px var(--gold), 0 0 0 2px color-mix(in srgb, var(--forest) 55%, #ffffff);
+}

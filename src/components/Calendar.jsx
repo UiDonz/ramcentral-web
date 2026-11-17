@@ -12,6 +12,7 @@ const DEFAULT_DOT_COLOR = '#c99a3c';
 // so the Club Calendar can load one month at a time. The News page doesn't pass it.
 export default function Calendar({ events, onDayClick, onMonthChange }) {
 const [current, setCurrent] = useState(() => new Date());
+const [selectedKey, setSelectedKey] = useState(null); // the day the user last clicked, outlined in the grid
 const today = useMemo(() => new Date(), []);
 const eventsByKey = useMemo(() => {
 const map = {};
@@ -37,14 +38,17 @@ let nextMonthDay = 1;
 while (cells.length % 7 !== 0 || cells.length < 35) cells.push({ n: nextMonthDay++, muted: true });
 function goPrev() {
 setCurrent(new Date(year, month - 1, 1));
+setSelectedKey(null);
 }
 function goNext() {
 setCurrent(new Date(year, month + 1, 1));
+setSelectedKey(null);
 }
 function handleClick(cell) {
 if (cell.muted) return;
 const key = `${year}-${month + 1}-${cell.n}`;
 const label = `${current.toLocaleString('default', { month: 'long' })} ${cell.n}, ${year}`;
+setSelectedKey(key);
 onDayClick(key, label, eventsByKey[key] || []);
 }
 return (
@@ -75,7 +79,8 @@ return (
 <button
 type="button"
 key={i}
-className={`calendar-cell${isToday ? ' today' : ''}`}
+className={`calendar-cell${isToday ? ' today' : ''}${key === selectedKey ? ' selected' : ''}`}
+aria-pressed={key === selectedKey}
 onClick={() => handleClick(cell)}
 >
 <span className="calendar-cell-num">{cell.n}</span>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -91,6 +91,16 @@ export default function ClubDetail() {
 
   useEffect(() => {
     getClub(clubId).then((c) => { setClub(c); setInfoForm(c); });
+  }, [clubId]);
+
+  // Live member count: the club doc is read once above, so keep just the
+  // counters fresh without touching the edit form.
+  useEffect(() => {
+    return onSnapshot(doc(db, 'clubs', clubId), (snap) => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      setClub((c) => (c ? { ...c, memberCount: d.memberCount, majorCounts: d.majorCounts, majorSampleSize: d.majorSampleSize } : c));
+    });
   }, [clubId]);
 
   useEffect(() => {
