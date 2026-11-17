@@ -48,6 +48,28 @@ export async function logAudit({
   });
 }
 
+// Turns user ids from audit entries into "Name (RAM ID)" for display. Results are kept
+// for the whole visit, so each person is only read once.
+const userLabelCache = {};
+export async function getUserLabels(uids) {
+  const out = {};
+  await Promise.all(
+    [...new Set(uids)].map(async (uid) => {
+      if (!(uid in userLabelCache)) {
+        try {
+          const snap = await getDoc(doc(db, 'users', uid));
+          const u = snap.exists() ? snap.data() : null;
+          userLabelCache[uid] = u ? (u.ramId ? `${u.name} (${u.ramId})` : u.name || uid) : 'Deleted user';
+        } catch {
+          userLabelCache[uid] = uid;
+        }
+      }
+      out[uid] = userLabelCache[uid];
+    })
+  );
+  return out;
+}
+
 export function listenToAuditLog(callback, count = 50) {
   const q = query(
     collection(db, 'auditLog'),

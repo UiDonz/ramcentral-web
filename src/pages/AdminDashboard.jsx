@@ -17,6 +17,7 @@ import {
   decideBudgetRequest,
   decideRoomBooking,
   listenToAuditLog,
+  getUserLabels,
   listenToCampusBudget,
   setCampusBudget,
   getQuickStats
@@ -84,6 +85,7 @@ export default function AdminDashboard() {
   const [semEvents, setSemEvents] = useState([]);
   const [reregs, setReregs] = useState([]);
   const [submittedRereg, setSubmittedRereg] = useState([]);
+  const [userLabels, setUserLabels] = useState({});
   const [staffRequests, setStaffRequests] = useState([]);
   const [onlyNeedsRereg, setOnlyNeedsRereg] = useState(false);
 
@@ -95,6 +97,20 @@ export default function AdminDashboard() {
   // Lists only one tab uses are loaded while that tab is open, to save Firestore reads.
   const needsAudit = tab === 'overview' || tab === 'audit';
   useEffect(() => (needsAudit ? listenToAuditLog(setAuditLog) : undefined), [needsAudit]);
+  // Member targets are stored as a user id (or clubId/userId); look up names to show instead.
+  useEffect(() => {
+    const uids = auditLog
+      .filter((e) => e.targetType === 'member' && e.target)
+      .map((e) => e.target.split('/').pop());
+    if (uids.length === 0) return undefined;
+    let active = true;
+    getUserLabels(uids).then((labels) => {
+      if (active) setUserLabels((prev) => ({ ...prev, ...labels }));
+    });
+    return () => {
+      active = false;
+    };
+  }, [auditLog]);
   useEffect(() => listenToSubmittedRereg(setSubmittedRereg, () => setSubmittedRereg([])), []);
   useEffect(() => (tab === 'clubs' ? listenToAllRereg(setReregs, () => setReregs([])) : undefined), [tab]);
   useEffect(() => listenToPendingStaffRequests(setStaffRequests, () => setStaffRequests([])), []);
@@ -168,6 +184,17 @@ export default function AdminDashboard() {
 
   const newSpend = spend.filter((r) => r.status === 'requested');
   const clubById = Object.fromEntries(allClubs.map((c) => [c.id, c]));
+  // What an audit entry was done to, in words: a member's name, RAM ID and club instead of raw ids.
+  function auditTarget(e) {
+    if (!e.target) return '';
+    if (e.targetType === 'member') {
+      const parts = e.target.split('/');
+      const who = userLabels[parts[parts.length - 1]] || 'Loading...';
+      const club = parts.length > 1 ? clubById[parts[0]]?.name : null;
+      return club ? `${who} in ${club}` : who;
+    }
+    return e.targetType ? `${e.targetType}: ${e.target}` : e.target;
+  }
   // Re-registration: what's waiting on Staff, and each club's renewal status.
   const approvedTermsByClub = {};
   reregs
@@ -384,7 +411,7 @@ export default function AdminDashboard() {
               <div key={e.id} className="activity-item">
                 <div>
                   {e.action}
-                  {e.target ? `: ${e.target}` : ''}
+                  {e.target ? `: ${auditTarget(e)}` : ''}
                 </div>
                 <div className="spend-meta">
                   {e.actorName} &middot; {formatWhen(e.timestamp)}
@@ -649,7 +676,7 @@ export default function AdminDashboard() {
                       <td>{entry.actorName}</td>
                       <td>{entry.action}</td>
                       <td>
-                        {entry.targetType ? `${entry.targetType}: ${entry.target}` : entry.target || '—'}
+                        {auditTarget(entry) || '—'}
                       </td>
                     </tr>
                   ))}
