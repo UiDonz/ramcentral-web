@@ -10,6 +10,8 @@ import CampusDirectory from '../components/CampusDirectory';
 import ClubCalendarPanel from '../components/ClubCalendarPanel';
 import { FARMINGDALE_CLUBS } from '../data/farmingdaleClubs';
 import { recommendClubs } from '../services/recommendations';
+// Second import from the same file (kept apart so the line above stays exactly as the Sprint 7 plan expects it).
+import { normalizeClubName } from '../data/farmingdaleClubs';
 export default function Home() {
  const { currentUser, profile } = useAuth();
  const { settings } = useSettings();
@@ -27,6 +29,24 @@ export default function Home() {
  const unsub = listenToClubs(setClubs);
 return unsub;
  }, [currentUser]);
+  useEffect(() => {
+    if (!currentUser) return;
+    // Every club the signed-in user is an approved member of.
+    const q = query(
+      collectionGroup(db, 'members'),
+      where('uid', '==', currentUser.uid),
+      where('status', '==', 'approved')
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setMyClubIds(new Set(snap.docs.map((d) => d.ref.parent.parent.id)));
+    });
+    return unsub;
+  }, [currentUser]);
+ // Same count the directory shows: the school's list plus app-only clubs.
+ const allCount = useMemo(() => {
+   const onList = new Set(FARMINGDALE_CLUBS.map((c) => normalizeClubName(c.name)));
+   return FARMINGDALE_CLUBS.length + clubs.filter((c) => !onList.has(normalizeClubName(c.name))).length;
+ }, [clubs]);
  const myClubs = useMemo(
  () => clubs.filter((c) => myClubIds.has(c.id)).sort((a, b) => a.name.localeCompare(b.name)),
  [clubs, myClubIds]
@@ -96,15 +116,6 @@ return unsub;
  >
  Your clubs <span className="tab-count">{myClubs.length}</span>
  </button>
- <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'active'}
-          className={`tab-btn${tab === 'active' ? ' selected' : ''}`}
-          onClick={() => setTab('active')}
-        >
-          On NewRamCentral <span className="tab-count">{clubs.length}</span>
-        </button>
         <button
           type="button"
           role="tab"
@@ -112,11 +123,11 @@ return unsub;
           className={`tab-btn${tab === 'all' ? ' selected' : ''}`}
           onClick={() => setTab('all')}
         >
-          All Farmingdale clubs <span className="tab-count">{FARMINGDALE_CLUBS.length}</span>
+          All Farmingdale clubs <span className="tab-count">{allCount}</span>
         </button>
       </div>
 
-      {tab === 'all' && <CampusDirectory liveClubs={clubs} />}
+      {tab === 'all' && <CampusDirectory liveClubs={clubs} myClubIds={myClubIds} majors={profile?.majors || []} />}
  {tab === 'mine' && (
  <>
  {myClubs.length === 0 && (
