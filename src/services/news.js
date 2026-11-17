@@ -1,7 +1,33 @@
 // Read-only access to the news/calendar data the scraper writes (scripts/scrape-news.js).
 // The client never writes to these collections.
-import { collection, query, where, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { readCache, writeCache } from '../utils/cache';
+// The scraper only updates these once a day, so a live listener is wasted reads.
+// Each list is fetched once and kept in localStorage for a few hours.
+const NEWS_TTL = 6 * 60 * 60 * 1000;
+// Loads a list from the cache or Firestore. Returns an "unsubscribe" so callers
+// can keep using these like listeners (it just ignores a late result).
+function loadCached(key, fetchList, callback, onError, label) {
+  let active = true;
+  const cached = readCache(key, NEWS_TTL);
+  if (cached) {
+    callback(cached);
+    return () => {};
+  }
+  fetchList()
+    .then((items) => {
+      writeCache(key, items);
+      if (active) callback(items);
+    })
+    .catch((err) => {
+      console.error(`[news] ${label} failed:`, err);
+      if (active && onError) onError(err);
+    });
+  return () => {
+    active = false;
+  };
+}
 // schoolNews dates are strings like "July 16, 2026", so Firestore's orderBy sorts them alphabetically;
 // sorting client-side after parsing them fixes the scrambled order.
 function toTimestamp(dateStr) {
@@ -12,32 +38,29 @@ return Number.isNaN(t) ? 0 : t;
 // (e.g. a missing index) leaves the UI spinning forever.
 export function listenToNewsByCategory(category, callback, onError) {
 const q = query(collection(db, 'schoolNews'), where('category', '==', category));
-return onSnapshot(
-q,
-(snap) => {
+return loadCached(
+`news-${category}`,
+async () => {
+const snap = await getDocs(q);
 const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 // Oldest to newest.
 items.sort((a, b) => toTimestamp(a.date) - toTimestamp(b.date));
-callback(items);
+return items;
 },
-(err) => {
-console.error(`[news] listenToNewsByCategory("${category}") failed:`, err);
-if (onError) onError(err);
-}
+callback,
+onError,
+`listenToNewsByCategory("${category}")`
 );
 }
-// Every academic-calendar entry for the school year; small enough to listen to all and filter by month locally.
+// Every academic-calendar entry for the school year, filtered by month locally. Cached (see loadCached).
 export function listenToAcademicCalendar(callback, onError) {
 const q = query(collection(db, 'academicCalendar'), orderBy('date', 'asc'));
-return onSnapshot(
-q,
-(snap) => {
-callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-},
-(err) => {
-console.error('[news] listenToAcademicCalendar failed:', err);
-if (onError) onError(err);
-}
+return loadCached(
+'academic-calendar',
+async () => (await getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() })),
+callback,
+onError,
+'listenToAcademicCalendar'
 );
 }
 // One-off fetch for a specific day's or week's precomputed digest.

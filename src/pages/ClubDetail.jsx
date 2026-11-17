@@ -69,6 +69,9 @@ function toDateTimeValue(ts) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// Member display names, kept for the whole visit so going back to a club doesn't re-read every user doc.
+const nameCache = {};
+
 export default function ClubDetail() {
   const { clubId } = useParams();
   const { currentUser, profile } = useAuth();
@@ -142,8 +145,11 @@ export default function ClubDetail() {
     const missing = members.filter((m) => !(m.uid in memberNames));
     if (missing.length === 0) return;
     missing.forEach(async (m) => {
-      const snap = await getDoc(doc(db, 'users', m.uid));
-      setMemberNames((prev) => ({ ...prev, [m.uid]: snap.exists() ? snap.data().name : m.uid }));
+      if (!(m.uid in nameCache)) {
+        const snap = await getDoc(doc(db, 'users', m.uid));
+        nameCache[m.uid] = snap.exists() ? snap.data().name : m.uid;
+      }
+      setMemberNames((prev) => ({ ...prev, [m.uid]: nameCache[m.uid] }));
     });
   }, [members]);
 
