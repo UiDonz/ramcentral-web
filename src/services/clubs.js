@@ -244,7 +244,30 @@ export async function promoteToOfficer(clubId, uid, title = 'officer') {
 }
 
 // Promotes, demotes or reassigns a member's role. canAssignRole checks the caller first; firestore.rules has the final say.
-export async function changeMemberRole(clubId, targetUid, newRole, actingMembership) {
+export async function changeMemberRole(clubId, targetUid, newRole, actingMembership, actor = null) {
+ // Staff can assign any role in any club (clubs imported from the campus list start with no president).
+ if (isStaff(actor)) {
+ if (newRole === 'president') {
+ const existing = await getDocs(
+ query(collection(db, 'clubs', clubId, 'members'), where('role', '==', 'president'))
+ );
+ for (const d of existing.docs) {
+ if (d.id !== targetUid) {
+ await updateDoc(d.ref, { role: 'vice_president' });
+ }
+ }
+ }
+ await updateDoc(doc(db, 'clubs', clubId, 'members', targetUid), { role: newRole });
+ await logAudit({
+ actor,
+ action: 'assign_club_role',
+ target: `${clubId}/${targetUid}`,
+ targetType: 'member',
+ details: `Set role to ${newRole}`
+ });
+ return;
+ }
+
   assertPermission(
     canAssignRole(actingMembership, newRole),
     `403 Forbidden: only a club President or Co-President can assign the ${

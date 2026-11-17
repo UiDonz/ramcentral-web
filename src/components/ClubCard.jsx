@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import ZoomCard from './ZoomCard';
 import { majorBreakdown, formatShare } from '../services/recommendations';
+import { cardThemeClass, cardThemeStyle } from '../data/cardThemes';
+import CardThemeIcon from './CardThemeIcon';
 // Clicking a club now zooms it into a large centered preview (see
 
 
@@ -18,10 +20,12 @@ export default function ClubCard({ club, reason, detail }) {
    const topMajors = majorBreakdown(club, 3);
    return (
      <ZoomCard
-       className="club-card"
-        ariaLabel={`View ${club.name}`}
-        preview={
-          <>
+ className={`club-card${cardThemeClass(club.cardTheme)}`}
+ style={cardThemeStyle(club.cardTheme)}
+ ariaLabel={`View ${club.name}`}
+ preview={
+ <>
+ <CardThemeIcon themeId={club.cardTheme} />
             <div className="club-card-header">
               <h3>{club.name}</h3>
               <span className="club-card-count">{club.memberCount || 0} members</span>

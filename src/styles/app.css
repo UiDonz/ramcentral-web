@@ -1457,3 +1457,81 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   background: var(--white);
   z-index: 1;
 }
+/* --- Club card themes (club presidents pick one; see data/cardThemes.js) ---
+ Every theme sets its own text colors so cards stay readable in both the
+ light and dark site themes. */
+.card-theme { color: #1e1e1c; border-color: rgba(0, 0, 0, 0.12); }
+.card-theme h3, .card-theme .club-card-desc, .card-theme .club-card-count,
+.card-theme .category-dot, .card-theme p { color: inherit; }
+.card-theme .club-card-desc, .card-theme .club-card-count { opacity: 0.8; }
+.card-theme-sage { background: #dfeadf; }
+.card-theme-sky { background: #dbeaf6; }
+.card-theme-blush { background: #f7e1e1; }
+.card-theme-sand { background: #f1e7d0; }
+.card-theme-lavender { background: #e7e1f5; }
+.card-theme-forest { background: #1c3d2e; color: #fff; }
+.card-theme-navy { background: #1f2f4f; color: #fff; }
+.card-theme-charcoal { background: #2d2d2b; color: #fff; }
+.card-theme-sunset { background: linear-gradient(135deg, #f59e6b, #d4577a 55%, #5b3a8c); color: #fff; }
+.card-theme-ocean { background: linear-gradient(160deg, #2a9bb8, #1b5e8c 60%, #123a63); color: #fff; }
+.card-theme-aurora {
+ background: radial-gradient(circle at 20% 20%, #5fd6a8, transparent 50%),
+ radial-gradient(circle at 85% 75%, #8a6fe0, transparent 55%), #17324d;
+ color: #fff;
+}
+.card-theme-dots { background: radial-gradient(rgba(28, 61, 46, 0.22) 1.5px, transparent 1.5px) 0 0 / 14px 14px, #f6f3ea; }
+.card-theme-stripes { background: repeating-linear-gradient(45deg, #f6efdc, #f6efdc 12px, #efe3c3 12px, #efe3c3 24px); }
+.card-theme-grid {
+ background: linear-gradient(rgba(30, 60, 90, 0.12) 1px, transparent 1px) 0 0 / 18px 18px,
+ linear-gradient(90deg, rgba(30, 60, 90, 0.12) 1px, transparent 1px) 0 0 / 18px 18px, #eaf1f7;
+}
+.card-theme .badge { background: rgba(255, 255, 255, 0.75); color: #5a4416; }
+.card-theme .recommended-badge { background: rgba(255, 255, 255, 0.85); color: #1c3d2e; }
+/* Pictures: a generated gradient + pattern (set inline) + one big icon. */
+.card-theme-picture { color: #fff8ea; position: relative; overflow: hidden; border-color: rgba(255, 255, 255, 0.16); }
+.card-theme-picture > *:not(.card-theme-icon) { position: relative; z-index: 1; }
+.card-theme-picture .club-card-category,
+.card-theme-picture .category-dot { color: rgba(255, 248, 234, 0.9) !important; }
+.card-theme-picture .club-card-desc, .card-theme-picture .club-card-count { opacity: 0.88; }
+.card-theme-icon {
+ position: absolute;
+ right: -8px;
+ bottom: -12px;
+ width: 104px;
+ height: 104px;
+ color: #fff8ea;
+ opacity: 0.3;
+ pointer-events: none;
+ filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+.theme-picker { display: flex; flex-direction: column; gap: 0.5em; margin: 0.6em 0; }
+.theme-picker-group { display: flex; flex-wrap: wrap; gap: 0.5em; }
+.theme-swatch {
+ width: 56px; height: 40px; border-radius: 8px; padding: 0; margin: 0;
+ border: 2px solid var(--border); cursor: pointer; font-size: 0.65rem;
+ display: flex; align-items: flex-end; justify-content: center; color: inherit;
+ position: relative; overflow: hidden;
+}
+.theme-swatch.selected { border-color: var(--forest); outline: 2px solid var(--forest); outline-offset: 1px; }
+.theme-swatch.card-theme { padding-bottom: 2px; }
+.theme-swatch-label {
+ background: rgba(255, 255, 255, 0.8);
+ color: #1e1e1c;
+ border-radius: 4px;
+ padding: 0 4px;
+ line-height: 1.3;
+ position: relative;
+ z-index: 1;
+}
+/* In the picker the icon sits in the middle of the small tile. */
+.theme-swatch .card-theme-icon {
+ right: auto;
+ left: 50%;
+ top: 3px;
+ bottom: auto;
+ width: 24px;
+ height: 24px;
+ transform: translateX(-50%);
+ opacity: 0.95;
+ z-index: 0;
+}
