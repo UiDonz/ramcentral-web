@@ -94,9 +94,14 @@ export default function Signup() {
           I am a
           <select value={form.role} onChange={update('role')}>
             <option value="student">Student</option>
-            <option value="faculty">Faculty / Staff</option>
+            <option value="staff">Staff</option>
           </select>
         </label>
+        {form.role === 'staff' && (
+          <p className="auth-hint">
+            You can sign in right away. The Admin tab appears once an existing admin approves your Staff access.
+          </p>
+        )}
 
         <button type="submit" className="auth-submit" disabled={submitting}>
           {submitting ? 'Creating account...' : 'Create account'}

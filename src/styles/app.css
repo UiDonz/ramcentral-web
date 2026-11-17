@@ -2625,3 +2625,202 @@ button.tab-btn.selected { font-weight: 600; }
 }
 button.danger-button { background: var(--danger); color: #fff; }
 button.danger-button:hover { background: var(--danger); filter: brightness(1.1); }
+
+/* Staff sign-up approval */
+.auth-hint { font-size: 0.82rem; color: #5f6b5f; margin: -0.4em 0 0.9em; }
+.staff-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8em;
+  flex-wrap: wrap;
+  background: var(--white);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 0.7em 1em;
+  margin: 0.4em 0 1em;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.staff-note-denied { border-color: var(--border); }
+.staff-request .form-actions { margin-top: 0.5em; }
+
+/* =====================================================================
+   PHONES (760px and narrower). Desktop is untouched; everything below
+   only applies on small screens.
+   ===================================================================== */
+@media (max-width: 760px) {
+  /* --- Top bar with a menu button; the sidebar slides in as a drawer --- */
+  .mobile-topbar {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
+    align-items: center;
+    justify-content: space-between;
+    background: var(--forest);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+    z-index: 240;
+  }
+  .sidebar {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(280px, 82vw);
+    height: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3em;
+    padding: calc(70px + env(safe-area-inset-top, 0px)) 12px calc(16px + env(safe-area-inset-bottom, 0px));
+    border-radius: 0 22px 22px 0;
+    transform: translateX(-105%);
+    transition: transform 0.25s ease;
+    z-index: 230;
+    overflow-y: auto;
+  }
+  .sidebar.open { transform: none; }
+  .sidebar-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 225;
+  }
+  .sidebar-scrim.open { opacity: 1; pointer-events: auto; }
+  body.menu-open { overflow: hidden; }
+  .sidebar-brand,
+  .sidebar-avatar,
+  .sidebar-logout { display: none; }
+  .sidebar-links { flex-direction: column; align-items: stretch; gap: 4px; width: 100%; }
+  .sidebar-link,
+  button.sidebar-link {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 14px;
+    width: auto;
+    min-height: 50px;
+    padding: 0 16px;
+    font-size: 1rem;
+    border-radius: 12px;
+    background: none;
+    border: none;
+    text-align: left;
+  }
+  .sidebar-mobile-only { display: flex; }
+  .sidebar-divider { margin-top: 0.6em; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+  .app-main {
+    margin-left: 0;
+    padding-top: calc(56px + env(safe-area-inset-top, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    overflow-x: clip;
+  }
+
+  /* --- Page spacing and type --- */
+  .page, .news-page { padding: 1.4em max(14px, env(safe-area-inset-left, 0px)) 2em; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.15rem; margin-top: 1.4rem; }
+  .page-header { gap: 0.8em; align-items: center; }
+
+  /* --- Cards fit the screen --- */
+  .club-grid { grid-template-columns: minmax(0, 1fr); }
+  .club-card, .dir-card, .event-card, .detail-section, .pw-card, .queue-item { min-width: 0; max-width: 100%; }
+  .club-card-header, .dir-card-top { flex-wrap: wrap; }
+  .club-card h3, .dir-card h3, .event-card h3 { overflow-wrap: anywhere; }
+  .detail-section { padding: 0.9em 1em 1em; }
+  .stat-tile-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6em; }
+
+  /* --- Tabs: one row you swipe sideways --- */
+  .tab-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  button.tab-btn { flex-shrink: 0; white-space: nowrap; padding: 0.7em 0.8em; }
+  .events-scope { overflow-x: auto; }
+
+  /* --- Tables scroll inside their card instead of widening the page --- */
+  .admin-table,
+  .pw-board-table,
+  .pw-training table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-table-scroll, .pw-board-scroll { max-width: 100%; }
+  /* Keep table columns readable and swipe sideways, instead of squashing names into many lines. */
+  .admin-table { min-width: 560px; }
+  .admin-table th { white-space: nowrap; }
+
+  /* --- Forms, rows and buttons stack and wrap --- */
+  .form-actions, .member-row, .pw-list-actions, .pw-inline-actions, .leave-confirm { flex-wrap: wrap; }
+  .member-row { gap: 0.5em 0.8em; }
+  .filter-bar { gap: 0.6em; }
+  .filter-bar .search-input { min-width: 0; width: 100%; max-width: none; flex: 1 1 100%; }
+  .search-input { max-width: none; width: 100%; }
+  .allocation-search .search-input { max-width: none; }
+  .rr-two, .auth-row, .money-form-row { grid-template-columns: minmax(0, 1fr); }
+  input, select, textarea { font-size: 16px; } /* stops iPhone from zooming into fields */
+  :is(.form-actions, .pw-list-actions, .page-header, .inline-form, .pw-modal-actions) > button { min-height: 42px; }
+
+  /* --- Filters open as a sheet across the screen --- */
+  .filter-panel {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    top: auto;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 210;
+  }
+
+  /* --- Pop-ups fill the phone screen --- */
+  .pw-overlay { padding: 0; align-items: stretch; z-index: 1000; }
+  .pw-modal, .pw-modal-wide {
+    max-width: none;
+    min-height: 100%;
+    border-radius: 0;
+    padding: calc(1em + env(safe-area-inset-top, 0px)) 1em calc(1.5em + env(safe-area-inset-bottom, 0px));
+  }
+  .zoom-panel.open { width: 94vw; max-height: 84vh; }
+
+  /* --- Home / Clubs page bits --- */
+  .pw-inbox-row { flex-direction: column; align-items: stretch; }
+  .staff-note { font-size: 0.85rem; }
+  .club-calendar-layout { gap: 0.8em; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .stat-tile-row { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Phone-menu pieces are hidden on desktop. */
+@media (min-width: 761px) {
+  .mobile-topbar, .sidebar-scrim, .sidebar-mobile-only { display: none; }
+}
+.mobile-brand { display: inline-flex; align-items: center; gap: 0.55em; color: #fff; text-decoration: none; font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.2rem; }
+.mobile-brand-accent { color: #d9a441; }
+button.mobile-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+button.mobile-menu-btn:hover { background: rgba(255, 255, 255, 0.2); }

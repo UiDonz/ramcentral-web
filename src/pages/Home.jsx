@@ -9,6 +9,7 @@ import ClubCard from '../components/ClubCard';
 import CampusDirectory from '../components/CampusDirectory';
 import ClubCalendarPanel from '../components/ClubCalendarPanel';
 import InboxPanel from '../components/paperwork/InboxPanel';
+import StaffStatusNote from '../components/StaffStatusNote';
 import { FARMINGDALE_CLUBS } from '../data/farmingdaleClubs';
 import { recommendClubs } from '../services/recommendations';
 // Second import from the same file (kept apart so the line above stays exactly as the Sprint 7 plan expects it).
@@ -191,6 +192,7 @@ return unsub;
        </div>
        {/* Invitations and advisor requests waiting on this person (renders
      nothing when there are none). */}
+       <StaffStatusNote />
        <InboxPanel />
        <div className="tab-bar" role="tablist" aria-label="Club lists">
          <button
