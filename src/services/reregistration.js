@@ -171,6 +171,17 @@ export function listenToMyReregTasks(uid, callback) {
 }
 
 // ---------- Staff ----------
+// Only the ones waiting on Staff, for the Approvals tab (much smaller than the full list).
+export function listenToSubmittedRereg(callback, onError) {
+  return onSnapshot(
+    query(col(), where('status', '==', 'submitted')),
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    (err) => {
+      if (onError) onError(err);
+    }
+  );
+}
+
 export function listenToAllRereg(callback, onError) {
   return onSnapshot(
     col(),

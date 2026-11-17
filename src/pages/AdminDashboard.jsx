@@ -31,7 +31,7 @@ import { toDate } from '../utils/semester';
 import { Chip, money } from '../components/money/SpendBits';
 import { SpendApprovalCard, StaffFinanceTab } from '../components/money/StaffMoney';
 import { ClubApplicationCard, TripReviewCard, ReregReviewCard } from '../components/paperwork/AdminReview';
-import { listenToAllRereg } from '../services/reregistration';
+import { listenToAllRereg, listenToSubmittedRereg } from '../services/reregistration';
 import { listenToPendingStaffRequests, decideStaffRequest } from '../services/staffRequests';
 import { needsReregistration, activeReregTerm, lastClosedRereg } from '../data/clubRequirements';
 
@@ -83,6 +83,7 @@ export default function AdminDashboard() {
   const [spend, setSpend] = useState([]);
   const [semEvents, setSemEvents] = useState([]);
   const [reregs, setReregs] = useState([]);
+  const [submittedRereg, setSubmittedRereg] = useState([]);
   const [staffRequests, setStaffRequests] = useState([]);
   const [onlyNeedsRereg, setOnlyNeedsRereg] = useState(false);
 
@@ -91,15 +92,19 @@ export default function AdminDashboard() {
   useEffect(() => listenToPendingBudgetRequests(setPendingBudget), []);
   useEffect(() => listenToPendingRoomBookings(setPendingRooms), []);
   useEffect(() => listenToPendingTrips(setPendingTrips), []);
-  useEffect(() => listenToAuditLog(setAuditLog), []);
-  useEffect(() => listenToAllRereg(setReregs, () => setReregs([])), []);
+  // Lists only one tab uses are loaded while that tab is open, to save Firestore reads.
+  const needsAudit = tab === 'overview' || tab === 'audit';
+  useEffect(() => (needsAudit ? listenToAuditLog(setAuditLog) : undefined), [needsAudit]);
+  useEffect(() => listenToSubmittedRereg(setSubmittedRereg, () => setSubmittedRereg([])), []);
+  useEffect(() => (tab === 'clubs' ? listenToAllRereg(setReregs, () => setReregs([])) : undefined), [tab]);
   useEffect(() => listenToPendingStaffRequests(setStaffRequests, () => setStaffRequests([])), []);
   // Every club's events this semester, to show how many each club has held.
   useEffect(() => {
+    if (tab !== 'clubs') return undefined;
     const sem = semesterWindow();
     if (!sem.inSession) return undefined;
     return listenToEventsInRange(sem.start, sem.end, setSemEvents, () => setSemEvents([]));
-  }, []);
+  }, [tab]);
   useEffect(() => listenToAllSpend(setSpend, () => setError('Could not load spending requests.')), []);
   useEffect(
     () => listenToOpenReports(setOpenReports, () => setError('Could not load message reports.')),
@@ -135,6 +140,8 @@ export default function AdminDashboard() {
   }
 
   async function handleRecomputeMajorStats() {
+    // Reads every member of every club, so it costs a lot of the daily Firestore quota.
+    if (!window.confirm('This reads every member of every club and uses a lot of the daily database quota. Run it now?')) return;
     setError(null);
     setStatsMessage('Recomputing...');
     try {
@@ -162,7 +169,6 @@ export default function AdminDashboard() {
   const newSpend = spend.filter((r) => r.status === 'requested');
   const clubById = Object.fromEntries(allClubs.map((c) => [c.id, c]));
   // Re-registration: what's waiting on Staff, and each club's renewal status.
-  const submittedRereg = reregs.filter((r) => r.status === 'submitted');
   const approvedTermsByClub = {};
   reregs
     .filter((r) => r.status === 'approved')
