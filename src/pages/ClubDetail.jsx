@@ -56,8 +56,10 @@ import ClubPaperworkPanel from '../components/paperwork/ClubPaperworkPanel';
 import PastEvents from '../components/PastEvents';
 import { CARD_THEMES, cardThemeClass, cardThemeStyle } from '../data/cardThemes';
 import CardThemeIcon from '../components/CardThemeIcon';
+import EventBackgroundPicker from '../components/EventBackgroundPicker';
 import { majorBreakdown, formatShare } from '../services/recommendations';
 import { parseTags, SUGGESTED_TAGS } from '../utils/tags';
+import { rankOf } from '../services/rbac';
 // Turns a saved event time into the 'YYYY-MM-DDTHH:mm' text the date picker uses.
 function toDateTimeValue(ts) {
   const d = new Date(ts && ts.seconds ? ts.seconds * 1000 : ts);
@@ -75,8 +77,8 @@ export default function ClubDetail() {
   const [events, setEvents] = useState([]);
   const [pastEvents, setPastEvents] = useState([]);
   const [announcementForm, setAnnouncementForm] = useState({ title: '', body: '' });
-  const [eventForm, setEventForm] = useState({ title: '', description: '', location: '', dateTime: '' });
-  const [editingEvent, setEditingEvent] = useState(null); // { id, title, description, location, dateTime }
+  const [eventForm, setEventForm] = useState({ title: '', description: '', location: '', dateTime: '', background: '' });
+  const [editingEvent, setEditingEvent] = useState(null); // { id, title, description, location, dateTime, background }
   const [editingInfo, setEditingInfo] = useState(false);
   const [infoForm, setInfoForm] = useState(null);
   const [memberNames, setMemberNames] = useState({});
@@ -84,6 +86,7 @@ export default function ClubDetail() {
   const [eventsLoadError, setEventsLoadError] = useState(null);
   const [eventMessage, setEventMessage] = useState(null); // { type: 'error' | 'ok', text }
   const [budgetRequests, setBudgetRequests] = useState([]);
+  const [membersOpen, setMembersOpen] = useState(false); // Members list starts collapsed
   const [expenses, setExpenses] = useState([]);
   const [budgetForm, setBudgetForm] = useState({ amount: '', reason: '' });
   const [expenseForm, setExpenseForm] = useState({ amount: '', description: '' });
@@ -226,7 +229,7 @@ export default function ClubDetail() {
     }
     try {
       await createEvent({ clubId, createdBy: currentUser.uid, ...eventForm });
-      setEventForm({ title: '', description: '', location: '', dateTime: '' });
+      setEventForm({ title: '', description: '', location: '', dateTime: '', background: '' });
       setEventMessage({ type: 'ok', text: 'Event created.' });
     } catch (err) {
       setEventMessage({ type: 'error', text: `Couldn't create the event: ${err.message}` });
@@ -240,7 +243,8 @@ export default function ClubDetail() {
       title: ev.title || '',
       description: ev.description || '',
       location: ev.location || '',
-      dateTime: toDateTimeValue(ev.dateTime)
+      dateTime: toDateTimeValue(ev.dateTime),
+      background: ev.background || ''
     });
   }
 
@@ -486,6 +490,9 @@ export default function ClubDetail() {
       <section className="detail-section">
         <h2>Events</h2>
         {isOfficer && (
+          // Collapsed by default so the events list isn't pushed down by the form.
+          <details className="collapsible-form">
+          <summary>Create an event</summary>
           <form onSubmit={handleCreateEvent} className="inline-form">
             <input
               placeholder="Event title"
@@ -506,6 +513,13 @@ export default function ClubDetail() {
               value={eventForm.description}
               onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
             />
+            <EventBackgroundPicker
+              value={eventForm.background}
+              title={eventForm.title}
+              dateTime={eventForm.dateTime}
+              location={eventForm.location}
+              onChange={(background) => setEventForm((f) => ({ ...f, background }))}
+            />
             <button type="submit">Create event</button>
             {eventMessage && (
               <p className={eventMessage.type === 'error' ? 'form-error' : 'form-success'}>
@@ -513,6 +527,7 @@ export default function ClubDetail() {
               </p>
             )}
           </form>
+          </details>
         )}
         {eventsLoadError && (
           <p className="form-error">Couldn't load this club's events ({eventsLoadError})</p>
@@ -540,6 +555,13 @@ export default function ClubDetail() {
                 value={editingEvent.description}
                 onChange={(e) => setEditingEvent((f) => ({ ...f, description: e.target.value }))}
               />
+              <EventBackgroundPicker
+                value={editingEvent.background}
+                title={editingEvent.title}
+                dateTime={editingEvent.dateTime}
+                location={editingEvent.location}
+                onChange={(background) => setEditingEvent((f) => ({ ...f, background }))}
+              />
               <div className="form-actions">
                 <button type="submit">Save changes</button>
                 <button type="button" className="secondary" onClick={() => setEditingEvent(null)}>
@@ -548,7 +570,8 @@ export default function ClubDetail() {
               </div>
             </form>
           ) : (
-          <div key={ev.id} className="event-card">
+          <div key={ev.id} className={`event-card${cardThemeClass(ev.background)}`} style={cardThemeStyle(ev.background)}>
+            <CardThemeIcon themeId={ev.background} />
             <h3>{ev.title}</h3>
             <p>{new Date(ev.dateTime.seconds ? ev.dateTime.seconds * 1000 : ev.dateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
             {ev.location && <p>{ev.location}</p>}
@@ -569,11 +592,19 @@ export default function ClubDetail() {
           ))}
   </section>
   <section className="detail-section">
-  <h2>Past events</h2>
   <PastEvents events={pastEvents} />
   </section>
   <section className="detail-section">
  <h2>Members ({members.filter((m) => m.status === 'approved').length})</h2>
+ <button
+   type="button"
+   className="members-toggle"
+   aria-expanded={membersOpen}
+   aria-label={membersOpen ? 'Hide members' : 'Show members'}
+   onClick={() => setMembersOpen((o) => !o)}
+ >
+   <span aria-hidden="true">{membersOpen ? '▴' : '▾'}</span>
+ </button>
  {(isOfficer || isStaffUser) && pendingMembers.length > 0 && (
  <div>
  <h3>Pending requests</h3>
@@ -585,10 +616,20 @@ export default function ClubDetail() {
             ))}
           </div>
         )}
-        {members.filter((m) => m.status === 'approved').map((m) => (
+        {/* Pending requests above stay visible even when the list is collapsed. */}
+        {membersOpen && (<>
+        {/* Officers first, highest role at the top; then everyone else A-Z. */}
+        {members
+          .filter((m) => m.status === 'approved')
+          .sort(
+            (a, b) =>
+              rankOf(a.role) - rankOf(b.role) ||
+              String(memberNames[a.uid] || '').localeCompare(String(memberNames[b.uid] || ''))
+          )
+          .map((m) => (
           <div key={m.uid} className="member-row">
             <span>{m.uid === currentUser.uid ? `${profile?.name} (you)` : (memberNames[m.uid] || m.uid)}</span>
-            <span className="badge">{CLUB_ROLE_LABELS[m.role] || m.role}</span>
+            <span className={`badge role-badge role-${m.role || 'member'}`}>{CLUB_ROLE_LABELS[m.role] || m.role}</span>
             {m.certified && (
               <span className="certified-badge" title="Certified student leader">&#10003; Certified</span>
             )}
@@ -612,6 +653,7 @@ export default function ClubDetail() {
              )}
            </div>
          ))}
+       </>)}
        </section>
 
        {/* Official paperwork, officer trainings, re-registration and trips. Only this club's officers and Staff
@@ -780,4 +822,4 @@ export default function ClubDetail() {
 </div>
 
   );
-}
+}

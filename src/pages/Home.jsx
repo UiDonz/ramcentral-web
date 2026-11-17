@@ -43,6 +43,27 @@ return unsub;
     });
     return unsub;
   }, [currentUser]);
+ // Clubs you asked to join that an officer hasn't approved yet (members docs
+ // with status 'pending'). Live, so a request drops off once it's approved.
+ const [requestedIds, setRequestedIds] = useState(new Set());
+ useEffect(() => {
+   if (!currentUser) return undefined;
+   const q = query(
+     collectionGroup(db, 'members'),
+     where('uid', '==', currentUser.uid),
+     where('status', '==', 'pending')
+   );
+   const unsub = onSnapshot(
+     q,
+     (snap) => setRequestedIds(new Set(snap.docs.map((d) => d.ref.parent.parent.id))),
+     () => setRequestedIds(new Set())
+   );
+   return unsub;
+ }, [currentUser]);
+ const requestedClubs = useMemo(
+   () => clubs.filter((c) => requestedIds.has(c.id)).sort((a, b) => a.name.localeCompare(b.name)),
+   [clubs, requestedIds]
+ );
  // Same count the directory shows: the school's list plus app-only clubs.
  const allCount = useMemo(() => {
    const onList = new Set(FARMINGDALE_CLUBS.map((c) => normalizeClubName(c.name)));
@@ -94,12 +115,41 @@ return unsub;
  // layout), so a saved order still works: 'myClubs' is the clubs you're
  // in, and 'browseClubs' - the key this section had before the directory
  // moved to its own tab - is now the recommendations.
+ // Shown right under Your clubs: clubs you started that Staff haven't approved
+ // yet, and clubs you asked to join that an officer hasn't approved yet.
+ const pendingSection = pendingMine.length + requestedClubs.length > 0 && (
+   <section key="pendingMine">
+     <h2>Waiting for approval</h2>
+     <div className="club-grid">
+       {pendingMine.map((c) => (
+         <Link key={c.id} to={`/clubs/${c.id}`} className="club-card pending-club-card">
+           <div className="club-card-header">
+             <h3>{c.name}</h3>
+             <span className="tag-chip">Pending</span>
+           </div>
+           <p className="club-card-category">{c.category || 'General'}</p>
+           <p className="pw-sub">Staff will review it soon. Open it to finish your paperwork.</p>
+         </Link>
+       ))}
+       {requestedClubs.map((c) => (
+         <Link key={c.id} to={`/clubs/${c.id}`} className="club-card pending-club-card">
+           <div className="club-card-header">
+             <h3>{c.name}</h3>
+             <span className="tag-chip">Request sent</span>
+           </div>
+           <p className="club-card-category">{c.category || 'General'}</p>
+           <p className="pw-sub">An officer will review your request. Open the club to cancel it.</p>
+         </Link>
+       ))}
+     </div>
+   </section>
+ );
  const sections = {
  myClubs: myClubs.length > 0 && (
  <section key="myClubs">
  <h2>Your clubs</h2>
  <div className="club-grid">
- {myClubs.map((c) => <ClubCard key={c.id} club={c} />)}
+ {myClubs.map((c) => <ClubCard key={c.id} club={c} direct />)}
  </div>
  </section>
  ),
@@ -167,24 +217,10 @@ return unsub;
  </button>
  </p>
  )}
- {pendingMine.length > 0 && (
-   <section>
-     <h2>Waiting for approval</h2>
-     <div className="club-grid">
-       {pendingMine.map((c) => (
-         <Link key={c.id} to={`/clubs/${c.id}`} className="club-card pending-club-card">
-           <div className="club-card-header">
-             <h3>{c.name}</h3>
-             <span className="tag-chip">Pending</span>
-           </div>
-           <p className="club-card-category">{c.category || 'General'}</p>
-           <p className="pw-sub">Staff will review it soon. Open it to finish your paperwork.</p>
-         </Link>
-       ))}
-     </div>
-   </section>
+ {settings.homeLayout.flatMap((key) =>
+   key === 'myClubs' ? [sections.myClubs || null, pendingSection || null] : [sections[key] || null]
  )}
- {settings.homeLayout.map((key) => sections[key] || null)}
+ {!settings.homeLayout.includes('myClubs') && pendingSection}
  <section>
  <h2>Club calendar</h2>
  <ClubCalendarPanel clubs={clubs} myClubIds={myClubIds} />

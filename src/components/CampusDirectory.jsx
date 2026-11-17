@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FARMINGDALE_CLUBS, DIRECTORY_CATEGORIES, normalizeClubName } from '../data/farmingdaleClubs';
 import { majorBreakdown } from '../services/recommendations';
+import { cardThemeClass, cardThemeStyle } from '../data/cardThemes';
+import CardThemeIcon from './CardThemeIcon';
 
 // The "All Farmingdale clubs" tab on the Clubs page: every club on campus,
 // with search + category + status filters. `liveClubs` is the active clubs
@@ -275,7 +277,13 @@ export default function CampusDirectory({ liveClubs, myClubIds = new Set(), majo
 
       <div className="club-grid">
         {sorted.map((c) => (
-          <article key={c.live?.id || c.name} className="dir-card">
+          <article
+            key={c.live?.id || c.name}
+            className={`dir-card${cardThemeClass(c.live?.cardTheme)}`}
+            style={cardThemeStyle(c.live?.cardTheme)}
+          >
+            {/* Clubs on RamConnect show the card style their officers picked (Club card style). */}
+            <CardThemeIcon themeId={c.live?.cardTheme} />
             <div className="dir-card-top">
               <h3>
                 {c.name}

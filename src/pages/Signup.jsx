@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AuthLayout from '../components/AuthLayout';
+import { playAuthZoom } from '../utils/authZoom';
 
 export default function Signup() {
   const { signup } = useAuth();
@@ -16,6 +18,7 @@ export default function Signup() {
 
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [zooming, setZooming] = useState(false);
 
   function update(field) {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -28,41 +31,51 @@ export default function Signup() {
 
     try {
       await signup(form);
-      navigate('/');
     } catch (err) {
       setError(
         err.code === 'auth/email-already-in-use'
           ? 'An account with that email already exists.'
           : 'Could not create your account. Please try again.'
       );
-    } finally {
       setSubmitting(false);
+      return;
     }
+    await playAuthZoom(setZooming);
+    navigate('/');
   }
 
   return (
-    <div className="auth-page">
+    <AuthLayout zooming={zooming}>
       <form className="auth-form" onSubmit={handleSubmit}>
-        <h1>Create your account</h1>
+        <h2>Create your account</h2>
         <p className="auth-subtitle">
           A stand-in for MyFSC login for now &mdash; see the README for notes on wiring up real SSO.
         </p>
 
         {error && <p className="form-error">{error}</p>}
 
-        <label>
-          Full name
-          <input value={form.name} onChange={update('name')} required />
-        </label>
+        <div className="auth-row">
+          <label>
+            Full name
+            <input value={form.name} onChange={update('name')} autoComplete="name" required />
+          </label>
 
-        <label>
-          RAM ID
-          <input value={form.ramId} onChange={update('ramId')} placeholder="R00000000" required />
-        </label>
+          <label>
+            RAM ID
+            <input value={form.ramId} onChange={update('ramId')} placeholder="R00000000" required />
+          </label>
+        </div>
 
         <label>
           Email
-          <input type="email" value={form.email} onChange={update('email')} required />
+          <input
+            type="email"
+            value={form.email}
+            onChange={update('email')}
+            placeholder="you@farmingdale.edu"
+            autoComplete="email"
+            required
+          />
         </label>
 
         <label>
@@ -72,6 +85,7 @@ export default function Signup() {
             value={form.password}
             onChange={update('password')}
             minLength={6}
+            autoComplete="new-password"
             required
           />
         </label>
@@ -84,7 +98,7 @@ export default function Signup() {
           </select>
         </label>
 
-        <button type="submit" disabled={submitting}>
+        <button type="submit" className="auth-submit" disabled={submitting}>
           {submitting ? 'Creating account...' : 'Create account'}
         </button>
 
@@ -92,6 +106,6 @@ export default function Signup() {
           Already have an account? <Link to="/login">Log in</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

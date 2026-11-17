@@ -1,3 +1,5 @@
+import { useLayoutEffect, useState } from 'react';
+import { takeZoomFlag } from './utils/authZoom';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
@@ -25,13 +27,23 @@ function AppShell() {
   const { currentUser, profile } = useAuth();
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  // After a successful sign-in/sign-up the auth page zooms out; the app then
+  // zooms in once (see utils/authZoom.js). Layout effect so there's no flash.
+  const [zoomIn, setZoomIn] = useState(false);
+  const signedInView = Boolean(currentUser) && !isAuthPage;
+  useLayoutEffect(() => {
+    if (!signedInView) setZoomIn(false);
+    else if (takeZoomFlag()) setZoomIn(true);
+  }, [signedInView]);
 
   if (!currentUser || isAuthPage) {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="*" element={<Login />} />
+        {/* Send signed-out visitors to /login so the page stays mounted
+            long enough to play its zoom after a successful sign-in. */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
   }
@@ -51,7 +63,7 @@ function AppShell() {
     <>
       {/* Fixed behind the app; renders nothing unless the user turned on a background in Settings. */}
       <BackgroundLayer />
-      <div className="app-shell">
+      <div className={`app-shell${zoomIn ? ' app-zoom-in' : ''}`}>
       <Sidebar />
       <div className="app-main">
         <Routes>

@@ -16,14 +16,11 @@ import CardThemeIcon from './CardThemeIcon';
 // you" section on Home (e.g. reason "Liked by others in your major",
 // detail "65% of members are CPIS majors") - every other call site is
 // unchanged and renders exactly as before.
-export default function ClubCard({ club, reason, detail }) {
+// direct: clicking goes straight to the club page instead of the zoom preview
+// (used for "Your clubs" on Home - you already know these clubs).
+export default function ClubCard({ club, reason, detail, direct = false }) {
    const topMajors = majorBreakdown(club, 3);
-   return (
-     <ZoomCard
- className={`club-card${cardThemeClass(club.cardTheme)}`}
- style={cardThemeStyle(club.cardTheme)}
- ariaLabel={`View ${club.name}`}
- preview={
+   const preview = (
  <>
  <CardThemeIcon themeId={club.cardTheme} />
             <div className="club-card-header">
@@ -41,7 +38,25 @@ export default function ClubCard({ club, reason, detail }) {
              {detail && <p className="recommended-detail">{detail}</p>}
              {club.requiresApproval && <span className="badge">Requires approval to join</span>}
            </>
-       }
+   );
+   if (direct) {
+     return (
+       <Link
+         to={`/clubs/${club.id}`}
+         className={`club-card${cardThemeClass(club.cardTheme)}`}
+         style={cardThemeStyle(club.cardTheme)}
+         aria-label={`Open ${club.name}`}
+       >
+         {preview}
+       </Link>
+     );
+   }
+   return (
+     <ZoomCard
+ className={`club-card${cardThemeClass(club.cardTheme)}`}
+ style={cardThemeStyle(club.cardTheme)}
+ ariaLabel={`View ${club.name}`}
+ preview={preview}
         expanded={
           <>
             <h3 className="zoom-panel-title">{club.name}</h3>

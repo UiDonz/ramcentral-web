@@ -31,7 +31,7 @@ button {
  font-family: 'Work Sans', sans-serif;
  font-weight: 500;
  background: var(--forest);
- color: var(--white);
+ color: #fff; /* not var(--white): that turns dark in dark mode */
  border: none;
  border-radius: 6px;
  padding: 0.6em 1.2em;
@@ -84,13 +84,13 @@ label.checkbox-label input { width: auto; }
  align-items: center;
  padding: 1em 2em;
  background: var(--forest);
- color: var(--white);
+ color: #fff;
 }
 .navbar-brand {
  font-family: 'Fraunces', serif;
  font-weight: 600;
  font-size: 1.3rem;
- color: var(--white);
+ color: #fff;
  text-decoration: none;
 }
 .navbar-links {
@@ -98,13 +98,13 @@ label.checkbox-label input { width: auto; }
  align-items: center;
  gap: 1.5em;
 }
-.navbar-links a {color: var(--white);
+.navbar-links a {color: #fff;
  text-decoration: none;
  font-size: 0.92rem;
 }
 .navbar-links a:hover { color: var(--gold); }
 .navbar-links button.link-button {
- color: var(--white);
+ color: #fff;
  opacity: 0.85;
 }
 /* Layout */
@@ -797,7 +797,7 @@ html[data-font-size="large"] { font-size: 18px; }
 .sidebar-link:hover { color: rgba(255, 255, 255, 0.85); }
 .sidebar-link.active {
   background: rgba(255, 255, 255, 0.1);
-  color: var(--white);
+  color: #fff;
 }
 .sidebar-spacer { flex: 1; }
 .sidebar-avatar {
@@ -805,7 +805,7 @@ html[data-font-size="large"] { font-size: 18px; }
   height: 30px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.15);
-  color: var(--white);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -820,7 +820,7 @@ html[data-font-size="large"] { font-size: 18px; }
   color: rgba(255, 255, 255, 0.5);
   padding: 0.3em;
 }
-.sidebar-logout:hover { background: rgba(255, 255, 255, 0.08); color: var(--white); }
+.sidebar-logout:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
 /* News page + calendar fixes */
 
 /* The app shell wrapper in App.jsx had no rule at all. */
@@ -1062,7 +1062,7 @@ html[data-theme='dark'] button.secondary:hover {
   text-align: center;
   border-radius: 50%;
   background: var(--gold);
-  color: var(--white);
+  color: #fff;
   font-size: 0.6rem;
   font-weight: 700;
 }
@@ -1077,7 +1077,7 @@ html[data-theme='dark'] button.secondary:hover {
   border: none;
   border-radius: 50%;
   background: rgba(30, 30, 28, 0.65);
-  color: var(--white);
+  color: #fff;
   font-size: 0.85rem;
   cursor: pointer;
 }
@@ -1094,7 +1094,7 @@ html[data-theme='dark'] button.secondary:hover {
   gap: 0.5em;
 
   background: var(--forest);
-  color: var(--white);
+  color: #fff;
   border-radius: 999px;
   padding: 0.6em 1.4em;
   font-size: 0.85rem;
@@ -1177,7 +1177,7 @@ html[data-theme='dark'] button.secondary:hover {
 .dtp-pop button.dtp-out { color: var(--muted); opacity: 0.5; }
 .dtp-pop button.dtp-today { box-shadow: inset 0 0 0 1.5px var(--gold); }
 .dtp-pop button.dtp-sel,
-.dtp-pop button.dtp-sel:hover { background: var(--forest); color: var(--white); font-weight: 600; }
+.dtp-pop button.dtp-sel:hover { background: var(--forest); color: #fff; font-weight: 600; }
 .dtp-time {
   display: flex;
   align-items: center;
@@ -1559,7 +1559,7 @@ button.filter-menu-btn:hover,
 button.filter-menu-btn[aria-expanded='true'] { background: var(--white); border-color: var(--forest); }
 .filter-menu-badge {
   background: var(--forest);
-  color: var(--white);
+  color: #fff;
   border-radius: 999px;
   font-size: 0.72rem;
   min-width: 1.5em;
@@ -1615,7 +1615,8 @@ button.chip.selected,
 button.chip.selected:hover {
   background: var(--forest);
   border-color: var(--forest);
-  color: var(--white);
+  /* Plain white: var(--white) turns dark in dark mode and vanished on the accent fill. */
+  color: #fff;
 }
 .filter-panel-foot { display: flex; justify-content: flex-end; padding-top: 0.2em; }
 .filter-panel-foot button { border-radius: 999px; padding: 0.6em 1.5em; }
@@ -1739,14 +1740,14 @@ flex-direction: column; font-size: 0.9em; }
 .pw-btn-link {
   display: inline-block;
   background: var(--forest);
-  color: var(--white);
+  color: #fff;
   padding: 0.5em 1em;
   border-radius: 6px;
   text-decoration: none;
   font-weight: 600;
 }
 
-.pw-btn-link:hover { background: var(--forest-light); color: var(--white); }
+.pw-btn-link:hover { background: var(--forest-light); color: #fff; }
 .pw-note {
   background: var(--cream);
   border-left: 3px solid var(--gold);
@@ -1798,3 +1799,456 @@ html[data-theme="dark"] .pw-tag-ok { border-color: color-mix(in srgb, var(--fore
 .sidebar-brand svg { display: block; }
 .sidebar-brand { width: 44px; height: 44px; border-radius: 10px; background: none; padding: 0; }
 .app-logo { display: block; border-radius: 22%; }
+
+/* Log in / Sign up redesign: animated backdrop, brand panel, zoom on success.
+   The auth pages use fixed brand colors so they look the same in light and dark mode. */
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5em max(16px, 3vw);
+  overflow: hidden;
+  background: #0f2419;
+  color: #f6ecd2;
+}
+.auth-bg {
+  position: absolute;
+  inset: -10%;
+  transition: transform 0.75s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.6s ease;
+}
+.auth-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+  animation: auth-drift 18s ease-in-out infinite alternate;
+}
+.auth-blob-1 { width: 46vw; height: 46vw; left: 2%; top: 4%; background: #2f6b4c; }
+.auth-blob-2 { width: 34vw; height: 34vw; right: 4%; bottom: 2%; background: #a87a22; animation-duration: 22s; }
+.auth-blob-3 { width: 26vw; height: 26vw; left: 42%; top: 46%; background: #1f5a44; animation-duration: 26s; }
+@keyframes auth-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(6vw, -4vh) scale(1.15); }
+}
+.auth-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1040px;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 430px);
+  gap: 3em;
+  align-items: center;
+}
+.auth-brand { transition: opacity 0.45s ease, transform 0.75s cubic-bezier(0.7, 0, 0.3, 1); }
+.auth-brand .app-logo { border-radius: 22%; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35); }
+.auth-brand-name {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  line-height: 1.05;
+  margin: 0.4em 0 0.25em;
+  color: #fffaf0;
+}
+.auth-brand-name span { color: #d9a441; }
+.auth-brand-tagline { font-size: 1.1rem; max-width: 34ch; color: #e8dcc0; margin: 0 0 1.4em; }
+.auth-brand-points { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6em; }
+.auth-brand-points li { display: flex; align-items: center; gap: 0.6em; color: #e8dcc0; }
+.auth-brand-points li::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #d9a441;
+  box-shadow: 0 0 0 4px rgba(217, 164, 65, 0.2);
+  flex-shrink: 0;
+}
+.auth-card {
+  animation: auth-card-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  transition: transform 0.75s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.45s ease 0.2s;
+}
+@keyframes auth-card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+}
+.auth-page .auth-form {
+  max-width: none;
+  background: #fbf6e9;
+  color: #1c3d2e;
+  border: 1px solid rgba(217, 164, 65, 0.5);
+  border-radius: 18px;
+  padding: 2.2em;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+.auth-page .auth-form h2 { font-family: 'Fraunces', serif; color: #1c3d2e; margin: 0 0 0.3em; font-size: 1.7rem; }
+.auth-page .auth-subtitle { color: #5f6b5f; margin: 0 0 1.2em; }
+.auth-page .auth-form label { color: #1c3d2e; font-weight: 500; font-size: 0.9rem; }
+.auth-page .auth-form input,
+.auth-page .auth-form select {
+  background: #fffdf7;
+  color: #1c3d2e;
+  border: 1px solid #d8cba6;
+  border-radius: 10px;
+  padding: 0.7em 0.85em;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.auth-page .auth-form input::placeholder { color: #9aa094; }
+.auth-page .auth-form input:focus,
+.auth-page .auth-form select:focus {
+  outline: none;
+  border-color: #d9a441;
+  box-shadow: 0 0 0 3px rgba(217, 164, 65, 0.3);
+}
+.auth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.9em; }
+.auth-page .auth-submit {
+  width: 100%;
+  margin-top: 0.4em;
+  padding: 0.85em;
+  border-radius: 10px;
+  background: #1c3d2e;
+  color: #fbf6e9;
+  font-size: 1rem;
+  transition: background 0.15s, transform 0.15s;
+}
+.auth-page .auth-submit:hover:not(:disabled) { background: #2f6b4c; transform: translateY(-1px); }
+.auth-page .auth-switch { color: #5f6b5f; }
+.auth-page .auth-switch a { color: #1c3d2e; font-weight: 600; }
+
+/* Success: card flies toward the viewer, backdrop and brand fade out. */
+.auth-page.zooming .auth-card { transform: scale(5); opacity: 0; }
+.auth-page.zooming .auth-bg { transform: scale(1.8); opacity: 0; }
+.auth-page.zooming .auth-brand { transform: scale(1.4); opacity: 0; }
+
+/* ...then the app zooms in. "backwards" so no transform is left behind,
+   which would break the sidebar's fixed positioning. */
+.app-zoom-in { animation: app-zoom-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+@keyframes app-zoom-in {
+  from { opacity: 0; transform: scale(0.88); }
+}
+
+@media (max-width: 820px) {
+  .auth-inner { grid-template-columns: minmax(0, 1fr); gap: 1.6em; max-width: 460px; }
+  .auth-brand { text-align: center; }
+  .auth-brand .app-logo { margin: 0 auto; width: 64px; height: 64px; }
+  .auth-brand-tagline { margin: 0 auto; }
+  .auth-brand-points { display: none; }
+}
+@media (max-width: 480px) {
+  .auth-row { grid-template-columns: minmax(0, 1fr); }
+  .auth-page .auth-form { padding: 1.5em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-blob, .auth-card, .app-zoom-in { animation: none; }
+  .auth-bg, .auth-brand, .auth-card { transition: none; }
+}
+
+/* Crest and name side by side, centered above the form card. */
+.auth-inner { grid-template-columns: minmax(0, 1fr); max-width: 460px; gap: 1.6em; justify-items: stretch; }
+.auth-brand { display: flex; align-items: center; justify-content: center; gap: 0.9em; }
+.auth-brand .app-logo { width: 64px; height: 64px; margin: 0; }
+.auth-brand .auth-brand-name { margin: 0; font-size: clamp(2.2rem, 6vw, 3rem); }
+
+/* ===== Event backgrounds (same options as Club card style) ===== */
+.event-card.card-theme {
+  position: relative;
+  overflow: hidden;
+}
+.event-card.card-theme > *:not(.card-theme-icon) {
+  position: relative;
+  z-index: 1;
+}
+.event-card.card-theme-picture {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.event-card .card-theme-icon {
+  /* Event cards are wide and short, so center the icon on the right edge
+     instead of letting the club-card corner position cut it off. */
+  top: 50%;
+  bottom: auto;
+  right: 24px;
+  transform: translateY(-50%);
+  width: 110px;
+  height: 110px;
+}
+.event-card.card-theme button.secondary {
+  background: rgba(255, 255, 255, 0.85);
+  color: #1e1e1c;
+  border-color: transparent;
+}
+
+/* All clubs / My clubs switch on the Events page */
+.events-scope {
+  display: flex;
+  gap: 0.4em;
+  margin: 0.8em 0;
+}
+.events-scope-btn {
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.35em 1em;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.events-scope-btn.active {
+  background: var(--forest);
+  color: #fff;
+  border-color: var(--forest);
+}
+
+/* Event background picker: collapsed by default, with a live preview when open. */
+.event-bg-picker { gap: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.event-bg-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  width: 100%;
+  padding: 0.6em 0.8em;
+  background: transparent;
+  color: var(--ink);
+  border: none;
+  border-radius: 0;
+  text-align: left;
+  font-weight: 400;
+}
+.event-bg-toggle:hover { background: rgba(127, 127, 127, 0.08); }
+.event-bg-toggle-text { flex: 1; }
+.event-bg-caret { color: var(--muted); }
+.event-bg-chip {
+  position: relative;
+  overflow: hidden;
+  width: 34px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.event-bg-chip .card-theme-icon { display: none; }
+.event-bg-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+  padding: 0.8em;
+  border-top: 1px solid var(--border);
+}
+.event-bg-preview-label,
+.event-bg-group-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.35em;
+}
+.event-bg-preview { margin: 0; min-height: 110px; }
+.event-bg-preview h3 { margin-top: 0; }
+
+/* Past events: collapsible header and search. */
+.section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  background: none;
+  color: var(--ink);
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.section-toggle:hover { background: none; }
+.section-toggle h2 { margin: 0; }
+.section-toggle-count { font-weight: 400; color: var(--muted); font-size: 0.8em; }
+.section-toggle-caret { color: var(--muted); font-size: 1.1rem; padding: 0 0.3em; }
+.past-events-body { margin-top: 0.9em; }
+.past-events-search { max-width: 420px; margin-bottom: 0.6em; }
+.past-events-count { font-size: 0.85rem; color: var(--muted); margin: 0 0 0.6em; }
+
+.past-events .section-toggle h2 { font-size: 1.25rem; }
+
+/* Create event: a collapsible bar that opens into the form. */
+.collapsible-form {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 0.8em 0 1em;
+}
+.collapsible-form > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8em 1.1em;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+.collapsible-form > summary::-webkit-details-marker { display: none; }
+.collapsible-form > summary::before { content: '+'; margin-right: 0.5em; color: var(--muted); font-weight: 400; }
+.collapsible-form[open] > summary::before { content: '\2212'; }
+.collapsible-form > summary::after { content: '\25BE'; color: var(--muted); margin-left: auto; }
+.collapsible-form[open] > summary::after { content: '\25B4'; }
+.collapsible-form > .inline-form { margin: 0; border: none; border-top: 1px solid var(--border); border-radius: 0 0 12px 12px; }
+
+/* Every page section (About, Events, Past events, Members, Settings groups...) is a
+   solid card, so text stays readable over a background photo. */
+.detail-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1em 1.4em 1.2em;
+  margin-top: 1.1em;
+}
+.detail-section > h2:first-child { margin-top: 0; }
+.detail-section .detail-section { border: none; padding: 0; background: none; }
+
+/* Calendar day panel: an event with a background shows it as a small card
+   (same look as the Events page cards, kept compact). */
+.club-day-event-themed {
+  position: relative;
+  overflow: hidden;
+  padding: 0.6em 4em 0.6em 0.8em;
+  margin: 0.45em 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+}
+.club-day-event-themed:last-child { border-bottom: 1px solid rgba(0, 0, 0, 0.12); }
+.club-day-event-themed > *:not(.card-theme-icon) { position: relative; z-index: 1; }
+.club-day-event-themed .day-bullet-text,
+.club-day-event-themed .club-day-event-meta,
+.club-day-event-themed .day-bullet-link { color: inherit; }
+.club-day-event-themed .club-day-event-meta { opacity: 0.85; }
+.club-day-event-themed .day-bullet-link { font-weight: 600; }
+.club-day-event-themed .card-theme-icon {
+  top: 50%;
+  bottom: auto;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+}
+
+/* Members: the whole header row toggles the list (button laid over it). */
+.detail-section:has(> .members-toggle) { position: relative; }
+.members-toggle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.6em;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 1.4em;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-radius: 14px 14px 0 0;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.members-toggle:hover { background: rgba(127, 127, 127, 0.06); }
+.detail-section:has(> .members-toggle) > h2 { margin-bottom: 0; }
+.detail-section:has(> .members-toggle[aria-expanded="true"]) > h2 { margin-bottom: 0.6em; }
+
+/* Role tags: each officer role gets its own color; plain members stay neutral. */
+.badge.role-badge { font-weight: 600; border: 1px solid transparent; }
+.badge.role-member { background: rgba(127, 127, 127, 0.14); color: var(--muted); }
+.badge.role-president { background: #f3d58a; color: #5a3e05; border-color: #d9a441; }
+.badge.role-co_president { background: #f6e3b0; color: #6b4a0a; border-color: #e0bb62; }
+.badge.role-vice_president { background: #e2d6f7; color: #4a2a86; border-color: #b9a1e6; }
+.badge.role-secretary { background: #d4e6f8; color: #1d4a7a; border-color: #9cc2e8; }
+.badge.role-treasurer { background: #d3efdc; color: #1b5e34; border-color: #93cfa8; }
+.badge.role-officer { background: #f7dccf; color: #7a3416; border-color: #e6ac90; }
+
+/* Directory cards for clubs on RamConnect use the club's card style. */
+.dir-card.card-theme { position: relative; overflow: hidden; }
+.dir-card.card-theme > *:not(.card-theme-icon) { position: relative; z-index: 1; }
+.dir-card.card-theme h3,
+.dir-card.card-theme .dir-category,
+.dir-card.card-theme .dir-detail,
+.dir-card.card-theme .dir-actions a { color: inherit; }
+.dir-card.card-theme .dir-abbr,
+.dir-card.card-theme .dir-detail { opacity: 0.85; }
+.dir-card.card-theme .dir-pill.on { background: rgba(255, 255, 255, 0.85); color: #1c3d2e; }
+.dir-card.card-theme .tag-chip { background: rgba(255, 255, 255, 0.78); color: #3d2f12; }
+.dir-card .card-theme-icon { width: 92px; height: 92px; right: -4px; bottom: -8px; }
+
+/* Readability on Pictures backgrounds: a soft dark wash behind the text,
+   a light text shadow, and a quieter icon. Applies to club, directory and
+   event cards that use a Pictures style. */
+.card-theme-picture { isolation: isolate; }
+.card-theme-picture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, rgba(8, 10, 14, 0.62) 0%, rgba(8, 10, 14, 0.42) 55%, rgba(8, 10, 14, 0.18) 100%);
+}
+.card-theme-picture,
+.card-theme-picture h3,
+.card-theme-picture h4,
+.card-theme-picture p,
+.card-theme-picture a { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
+.card-theme-picture .card-theme-icon { opacity: 0.2; z-index: 0; }
+.card-theme-picture .tag-chip,
+.card-theme-picture .dir-pill,
+.card-theme-picture .badge { text-shadow: none; }
+.dir-card.card-theme .dir-abbr { color: inherit; opacity: 0.8; }
+.dir-card.card-theme .dir-category { font-weight: 600; }
+.dir-card.card-theme .tag-chip { background: rgba(255, 255, 255, 0.9); color: #2a2213; }
+.dir-card .card-theme-icon { width: 80px; height: 80px; right: 6px; bottom: 6px; }
+
+/* Tags on any styled card (Your clubs, directory, recommendations): a solid light
+   chip with dark text, so they read on every background in light and dark mode. */
+.card-theme .tag-chip {
+  background: rgba(255, 255, 255, 0.9);
+  color: #2a2213;
+  text-shadow: none;
+}
+
+/* News: a club event's zoomed panel uses the event's background. */
+.zoom-panel.card-theme { position: fixed; overflow: auto; }
+.zoom-panel.card-theme > .zoom-close { position: absolute; z-index: 2; }
+.zoom-panel.card-theme .zoom-panel-title,
+.zoom-panel.card-theme .zoom-panel-meta,
+.zoom-panel.card-theme .zoom-panel-body,
+.zoom-panel.card-theme .overview-label,
+.zoom-panel.card-theme .feed-item-link { color: inherit; }
+.zoom-panel.card-theme .zoom-panel-meta,
+.zoom-panel.card-theme .overview-label { opacity: 0.85; }
+.zoom-panel.card-theme .feed-item-link { font-weight: 600; text-decoration: underline; }
+.zoom-panel.card-theme .feed-item-tag { background: rgba(255, 255, 255, 0.9); color: #72243e; text-shadow: none; }
+.zoom-panel.card-theme .card-theme-icon { width: 150px; height: 150px; right: 18px; bottom: 14px; }
+.zoom-panel.card-theme-picture .zoom-close { background: rgba(255, 255, 255, 0.2); color: #fff; }
+/* The close button was dark on dark panels; give it the readable text color. */
+html[data-theme="dark"] .zoom-close { color: var(--ink); background: rgba(255, 255, 255, 0.08); }
+
+/* News: Today's overview matches the calendar column's height exactly and scrolls
+   inside. height: 0 + flex-grow means its own content never makes the row taller;
+   it just fills whatever height the calendar side has. */
+.news-today-col .today-card {
+  flex: 1 1 0;
+  height: 0;
+  min-height: 420px;
+}
+@media (max-width: 760px) {
+  .news-today-col .today-card { flex: none; height: 420px; }
+}
+
+/* Clubs page calendar: the day panel lines up with the calendar's top and is
+   exactly as tall as it; extra events scroll inside. contain: size keeps the
+   panel's own content from stretching the row. */
+.club-calendar-layout { align-items: stretch; }
+.club-calendar-layout > .club-day-panel {
+  margin-top: 0;
+  min-height: 0;
+  max-height: none;
+  contain: size;
+  overflow-y: auto;
+}
+@media (max-width: 760px) {
+  .club-calendar-layout > .club-day-panel { contain: none; max-height: 420px; }
+}
