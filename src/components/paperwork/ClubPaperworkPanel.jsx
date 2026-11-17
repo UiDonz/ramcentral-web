@@ -16,12 +16,13 @@ import {
 } from '../../services/clubPaperwork';
 
 import { canViewClubFinances } from '../../services/rbac';
-import { CORE_OFFICERS, MIN_ROSTER, nextReregistration } from '../../data/clubRequirements';
+import { CORE_OFFICERS, MIN_ROSTER } from '../../data/clubRequirements';
 import OfficerSheetModal from './OfficerSheetModal';
 import RosterModal from './RosterModal';
 import ConstitutionTemplateModal from './ConstitutionTemplateModal';
 import AdvisorPickerModal from './AdvisorPickerModal';
 import TrainingTable from './TrainingTable';
+import ReregistrationCard from './ReregistrationCard';
 const kb = (n) => `${Math.max(1, Math.round((n || 0) / 1024))} KB`;
 function when(ts) {
   if (!ts) return '';
@@ -54,7 +55,6 @@ export default function ClubPaperworkPanel({
   const [error, setError] = useState('');
   const fileInput = useRef(null);
   const canTrip = canViewClubFinances(myMembership?.role);
-  const rereg = nextReregistration();
   useEffect(() => listenToApplication(clubId, setApplication, () => setApplication(null)), [clubId]);
   useEffect(() => listenToClubAdvisorRequest(clubId, setAdvisorReq, () => setAdvisorReq(null)), [clubId]);
   useEffect(() => listenToClubInvites(clubId, setInvites), [clubId]);
@@ -270,15 +270,19 @@ ${declined} declined`
         isStaffUser={isStaffUser}
         actor={actor}
       />
-      <h3>Re-registration</h3>
-      <div className="pw-card">
-        <strong>{rereg.label}</strong>
-        <p className="pw-hint">
-          Every semester the president renews in RamCentral. The Core 4 officers finish their trainings and
-          accept their position's Terms and Conditions. You also upload your current constitution, say
-          whether your advisor changed, and submit a mission statement.
-        </p>
-      </div>
+      <ReregistrationCard
+        clubId={clubId}
+        club={club}
+        members={members}
+        memberNames={memberNames}
+        myMembership={myMembership}
+        currentUser={currentUser}
+        isStaffUser={isStaffUser}
+        actor={actor}
+        hasConstitutionOnFile={!!application?.constitution}
+        constitutionName={application?.constitution?.fileName || ''}
+        advisorName={advisorReq && advisorReq.status === 'accepted' ? advisorReq.advisorName : ''}
+      />
       {(canTrip || isStaffUser) && (
         <>
           <h3>Trips</h3>

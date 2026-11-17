@@ -24,9 +24,13 @@ const clubsCol = collection(db, 'clubs');
 
 export function listenToClubs(callback) {
   const q = query(clubsCol, where('status', '==', 'active'), orderBy('memberCount', 'desc'));
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    },
+    (err) => console.error('[clubs] could not load clubs', err)
+  );
 }
 
 export async function getClub(clubId) {

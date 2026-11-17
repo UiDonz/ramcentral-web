@@ -58,6 +58,10 @@ return !!role && CLUB_FINANCE_ROLES.includes(role);
 export function canManageClubFinances(role) {
 return role === 'treasurer';
 }
+// Filing a spending request (Expense Authorization Form) is for the same people who can see the club's finances.
+export function canRequestSpending(role) {
+return canViewClubFinances(role);
+}
 // Event/room logistics belong to the executive officers (President, Co-President, Vice President).
 const CLUB_LOGISTICS_ROLES = ['president', 'co_president', 'vice_president'];
 export function canManageLogistics(role) {
@@ -73,4 +77,4 @@ this.code = 403;
 }
 export function assertPermission(condition, message) {
 if (!condition) throw new ForbiddenError(message);
-}
+}

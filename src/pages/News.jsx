@@ -461,52 +461,8 @@ export default function News() {
     getDigest(todayKey()).then(setTodayDigest);
   }, []);
 
-  // Auto-scrolls the News page while idle; stops on real scroll input (wheel, touch, keys, scrollbar),
-  // respects the ZoomCard scroll lock and reduced motion, and loops back to the top.
-  useEffect(() => {
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return undefined;
-
-    const IDLE_DELAY_MS = 1800;
-    const SPEED_PX_PER_SEC = 26;
-
-    let lastInteraction = Date.now();
-    let lastTs = null;
-    let raf;
-
-    function markInteraction() {
-      lastInteraction = Date.now();
-    }
-    const interactionEvents = ['wheel', 'touchstart', 'keydown', 'mousedown'];
-    interactionEvents.forEach((evt) => window.addEventListener(evt, markInteraction, { passive: true }));
-
-    function step(ts) {
-      if (lastTs != null) {
-        const dt = (ts - lastTs) / 1000;
-        const idle = Date.now() - lastInteraction > IDLE_DELAY_MS;
-        const zoomLocked = document.body.classList.contains('zoom-locked');
-        if (idle && !zoomLocked) {
-          const doc = document.documentElement;
-          const maxScroll = doc.scrollHeight - doc.clientHeight;
-          if (maxScroll > 0) {
-            const next = window.scrollY + SPEED_PX_PER_SEC * dt;
-            window.scrollTo(0, next >= maxScroll ? 0 : next);
-          }
-        }
-      }
-      lastTs = ts;
-      raf = requestAnimationFrame(step);
-    }
-    raf = requestAnimationFrame(step);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      interactionEvents.forEach((evt) => window.removeEventListener(evt, markInteraction));
-    };
-  }, []);
+  // (The whole-page auto-scroll was removed: it kept pulling people back to the
+  // top after they scrolled down. The feed boxes still scroll on their own.)
 
   function handleDayClick(dateKey, dateLabel, eventsForDay) {
     const allNews = [...academic, ...clubsFairs, ...campus];

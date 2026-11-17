@@ -247,6 +247,55 @@ allow create: if isClubTreasurer(request.resource.data.clubId);
 allow update: if isStaff();
 allow delete: if false;
 }
+// --- spendRequests/{id} ---
+// A club's request to spend money (the Expense Authorization Form step), and its trip through
+// approve -> buy -> receipts -> paid. A club's President/Co-President/Treasurer can file one and take the club's
+// own steps (say who bought it, send receipts); only Staff can approve, deny, check receipts or mark paid.
+match /spendRequests/{id} {
+allow read: if isStaff() || isClubFinanceOfficer(resource.data.clubId);
+allow create: if isClubFinanceOfficer(request.resource.data.clubId) &&
+request.resource.data.status == 'requested' &&
+request.resource.data.requestedBy == request.auth.uid;
+allow update: if isStaff() ||
+(isClubFinanceOfficer(resource.data.clubId) &&
+request.resource.data.diff(resource.data).affectedKeys()
+.hasOnly(['status', 'boughtBy', 'boughtAt', 'receiptCount', 'returnReason', 'receiptsAt']));
+allow delete: if false;
+match /receipts/{rid} {
+allow read: if isStaff() ||
+isClubFinanceOfficer(get(/databases/$(database)/documents/spendRequests/$(id)).data.clubId);
+allow create: if isClubFinanceOfficer(get(/databases/$(database)/documents/spendRequests/$(id)).data.clubId);
+allow update, delete: if false;
+}
+}
+// --- reregistrations/{clubId__term} ---
+// A club's renewal for one semester. The club's officers start and fill it in
+// (each Core 4 officer accepts their own terms); only Staff can approve it or
+// send it back. Officers listed on it can read it for their "Waiting for you"
+// inbox. Never deleted, so there is a history of every renewal.
+match /reregistrations/{id} {
+allow read: if isStaff() || resource == null ||
+isClubOfficer(resource.data.clubId) ||
+(isSignedIn() && request.auth.uid in resource.data.officerUids);
+allow create: if isClubOfficer(request.resource.data.clubId) &&
+request.resource.data.status == 'draft' &&
+id == request.resource.data.clubId + '__' + request.resource.data.term;
+allow update: if isStaff() ||
+(isClubOfficer(resource.data.clubId) &&
+request.resource.data.clubId == resource.data.clubId &&
+resource.data.status != 'approved' &&
+(request.resource.data.status in ['draft', 'submitted'] ||
+request.resource.data.status == resource.data.status) &&
+!request.resource.data.diff(resource.data).affectedKeys()
+.hasAny(['clubId', 'term', 'decidedBy', 'decidedByName', 'decidedAt', 'returnReason']));
+allow delete: if false;
+match /files/{fileId} {
+allow read: if isStaff() ||
+isClubOfficer(get(/databases/$(database)/documents/reregistrations/$(id)).data.clubId);
+allow create, update: if isClubOfficer(get(/databases/$(database)/documents/reregistrations/$(id)).data.clubId);
+allow delete: if false;
+}
+}
 // --- roomBookings/{id} ---
 match /roomBookings/{id} {
 // A club's logistics officers (President/Co-President/VP) can
