@@ -15,7 +15,9 @@ export const DEFAULT_SETTINGS = {
   backgroundStaticImageId: null,
   backgroundFadeImageIds: [],
   // Club calendar on the Clubs page: also show events from clubs you haven't joined.
-  calendarAllClubs: false
+  calendarAllClubs: false,
+  // Events page: 'all' clubs or only 'mine'.
+  eventsScope: 'all'
 };
 export function mergeSettings(saved) {
   const merged = { ...DEFAULT_SETTINGS, ...(saved || {}) };

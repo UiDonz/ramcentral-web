@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +7,8 @@ import { saveProfileAnswers } from '../services/profile';
 import MajorInterestPicker from '../components/MajorInterestPicker';
 
 export default function Profile() {
-  const { currentUser, profile, updateProfileLocal } = useAuth();
+  const { currentUser, profile, updateProfileLocal, logout } = useAuth();
+  const navigate = useNavigate();
   const [bio, setBio] = useState(profile?.bio || '');
   const [saved, setSaved] = useState(false);
   const [answers, setAnswers] = useState({
@@ -38,7 +40,20 @@ export default function Profile() {
 
   return (
     <div className="page narrow">
-      <h1>{profile?.name}</h1>
+      <div className="page-header">
+        <h1>{profile?.name}</h1>
+        {/* On phones the bottom bar has no room for Log out, so it lives here too. */}
+        <button
+          type="button"
+          className="secondary"
+          onClick={async () => {
+            await logout();
+            navigate('/login');
+          }}
+        >
+          Log out
+        </button>
+      </div>
       <p className="club-card-category">
         {profile?.role} &middot; {profile?.ramId}
       </p>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { collectionGroup, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { listenToUpcomingEvents } from '../services/events';
 import { listenToClubs } from '../services/clubs';
 import { cardThemeClass, cardThemeStyle } from '../data/cardThemes';
@@ -24,7 +25,10 @@ export default function Events() {
   const [events, setEvents] = useState([]);
   const [clubs, setClubs] = useState([]);
   const [myClubIds, setMyClubIds] = useState(new Set());
-  const [scope, setScope] = useState('all');
+  // Saved with the user's settings, so All clubs / My clubs stays how they left it.
+  const { settings, updateSettings } = useSettings();
+  const scope = settings.eventsScope === 'mine' ? 'mine' : 'all';
+  const setScope = (value) => updateSettings({ eventsScope: value });
 
   useEffect(() => {
     const unsub = listenToUpcomingEvents(setEvents);

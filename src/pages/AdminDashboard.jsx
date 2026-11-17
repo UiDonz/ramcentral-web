@@ -32,6 +32,7 @@ import { Chip, money } from '../components/money/SpendBits';
 import { SpendApprovalCard, StaffFinanceTab } from '../components/money/StaffMoney';
 import { ClubApplicationCard, TripReviewCard, ReregReviewCard } from '../components/paperwork/AdminReview';
 import { listenToAllRereg } from '../services/reregistration';
+import { listenToPendingStaffRequests, decideStaffRequest } from '../services/staffRequests';
 import { needsReregistration, activeReregTerm, lastClosedRereg } from '../data/clubRequirements';
 
 function StatTile({ label, value }) {
@@ -82,6 +83,7 @@ export default function AdminDashboard() {
   const [spend, setSpend] = useState([]);
   const [semEvents, setSemEvents] = useState([]);
   const [reregs, setReregs] = useState([]);
+  const [staffRequests, setStaffRequests] = useState([]);
   const [onlyNeedsRereg, setOnlyNeedsRereg] = useState(false);
 
   useEffect(() => listenToAllClubsForStaff(setAllClubs), []);
@@ -91,6 +93,7 @@ export default function AdminDashboard() {
   useEffect(() => listenToPendingTrips(setPendingTrips), []);
   useEffect(() => listenToAuditLog(setAuditLog), []);
   useEffect(() => listenToAllRereg(setReregs, () => setReregs([])), []);
+  useEffect(() => listenToPendingStaffRequests(setStaffRequests, () => setStaffRequests([])), []);
   // Every club's events this semester, to show how many each club has held.
   useEffect(() => {
     const sem = semesterWindow();
@@ -185,6 +188,7 @@ export default function AdminDashboard() {
     return <span className="pw-sub">-</span>;
   }
   const pendingApprovalsTotal =
+    staffRequests.length +
     submittedRereg.length +
     pendingClubs.length +
     pendingBudget.length +
@@ -396,6 +400,27 @@ export default function AdminDashboard() {
        and adds the roster invitations / denial reason). */}
           {pendingClubs.map((c) => (
             <ClubApplicationCard key={c.id} club={c} actor={actor} onError={setError} />
+          ))}
+
+          {/* People who signed up as Staff: approve gives them the Admin tab,
+              deny keeps them as a Student account. */}
+          {staffRequests.map((r) => (
+            <div key={r.id} className="queue-item staff-request">
+              <div>
+                <strong>Staff access request:</strong> {r.name || 'New account'} ({r.email})
+                {r.createdAt?.seconds && (
+                  <span className="pw-sub"> · {new Date(r.createdAt.seconds * 1000).toLocaleDateString()}</span>
+                )}
+              </div>
+              <div className="form-actions">
+                <button type="button" onClick={() => handle(decideStaffRequest, r, true, actor)}>
+                  Approve
+                </button>
+                <button type="button" className="secondary" onClick={() => handle(decideStaffRequest, r, false, actor)}>
+                  Deny
+                </button>
+              </div>
+            </div>
           ))}
 
           {submittedRereg.map((r) => (

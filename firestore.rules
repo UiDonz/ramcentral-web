@@ -84,11 +84,17 @@ membershipOf(clubId, request.auth.uid).role in ['president', 'co_president',
 }
 // --- users/{uid} ---
 // Anyone signed in can read basic profiles (needed to show member
-// names on a club page). Only the owner can write their own doc.
+// names on a club page). Only the owner can write their own doc - but a new
+// account always starts as a student (asking for Staff only sets
+// staffRequest: 'pending'), and nobody can change their own role or
+// staffRequest. Only Staff (admins) can, when they approve or deny.
 match /users/{uid} {
 allow read: if isSignedIn();
-allow create: if isSelf(uid);
-allow update: if isSelf(uid);
+allow create: if isSelf(uid) &&
+request.resource.data.role == 'student' &&
+(!('staffRequest' in request.resource.data) || request.resource.data.staffRequest == 'pending');
+allow update: if isStaff() ||
+(isSelf(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'staffRequest']));
 allow delete: if false;
 
 // --- users/{uid}/backgroundImages/{imageId} ---
@@ -96,6 +102,15 @@ allow delete: if false;
 match /backgroundImages/{imageId} {
 allow read, write: if isSelf(uid);
 }
+}
+// --- staffRequests/{uid} ---
+// "I signed up as Staff": the person files their own (always pending);
+// only Staff (admins) can read the list and approve or deny.
+match /staffRequests/{uid} {
+allow read: if isStaff() || isSelf(uid);
+allow create: if isSelf(uid) && request.resource.data.status == 'pending';
+allow update: if isStaff();
+allow delete: if false;
 }
 // --- clubs/{clubId} ---
 match /clubs/{clubId} {

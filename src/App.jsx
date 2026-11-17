@@ -49,7 +49,9 @@ function AppShell() {
   }
   // Students who haven't answered the new-account questions are held on /welcome with no sidebar.
   // Staff/faculty skip this, and profile is null for a moment on first load.
-  const needsOnboarding = profile && profile.role === 'student' && !profile.onboardingComplete;
+  // A pending Staff request skips the student questions; if it's denied the account is a student and gets them then.
+  const needsOnboarding =
+    profile && profile.role === 'student' && !profile.onboardingComplete && profile.staffRequest !== 'pending';
   if (needsOnboarding) {
     return (
       <Routes>
