@@ -141,17 +141,20 @@ function expandMultiDay(events) {
 
 // Turns a calendar event (date is 'YYYY-M-D') into the same shape the feed cards use.
 function buildCalendarFeedItem(ev) {
-  const [y, m, d] = ev.date.split('-').map(Number);
-  const day = new Date(y, m - 1, d);
+  const day = keyToDate(ev.date);
+  // Multi-day events (e.g. Thanksgiving Break) keep showing until their last day.
+  const lastDay = ev.endDate ? keyToDate(ev.endDate) : day;
+  const fmt = (dt) => dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
   return {
     id: `cal-${ev.id}`,
     title: ev.title,
-    date: day.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+    date: ev.endDate ? `${fmt(day)} - ${fmt(lastDay)}` : fmt(day),
     summary: [ev.time, ev.description && ev.description !== ev.title ? shorten(ev.description) : '']
       .filter(Boolean)
       .join(' — '),
     url: ev.url || ACADEMIC_CALENDAR_URL,
     dayStart: day.getTime(),
+    dayEnd: lastDay.getTime(),
     category: ev.category,
   };
 }
@@ -513,8 +516,9 @@ export default function News() {
   const upcomingCalendar = calendarEvents
     .filter((ev) => ev.date)
     .map(buildCalendarFeedItem)
-    .filter((it) => it.dayStart >= todayStart && it.dayStart <= windowEnd)
-    .sort((a, b) => a.dayStart - b.dayStart);
+    .filter((it) => it.dayEnd >= todayStart && it.dayStart <= windowEnd)
+    // An event that already started (a break in progress) sorts as if it starts today.
+    .sort((a, b) => Math.max(a.dayStart, todayStart) - Math.max(b.dayStart, todayStart));
   const calendarFor = (cat) => upcomingCalendar.filter((it) => it.category === cat);
 
   // News headlines older than a week drop off; newest first.
