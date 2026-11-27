@@ -187,6 +187,8 @@ type: 'daily',
 text: digestText,
 generatedAt: Timestamp.now(),
 });
+// Tells browsers their saved copy of news/calendar is out of date (see src/services/news.js).
+await db.collection('newsMeta').doc('lastRun').set({ at: Timestamp.now() });
 console.log(`Wrote ${newsItems.length} news items, ${calendarEvents.length} calendar events, 1
 digest.`);
 }

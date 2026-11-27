@@ -2,27 +2,44 @@
 // The client never writes to these collections.
 import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { readCache, writeCache } from '../utils/cache';
+import { readCacheEntry, writeCache } from '../utils/cache';
 // The scraper only updates these once a day, so a live listener is wasted reads.
-// Each list is fetched once and kept in localStorage for a few hours.
-const NEWS_TTL = 6 * 60 * 60 * 1000;
-// Loads a list from the cache or Firestore. Returns an "unsubscribe" so callers
-// can keep using these like listeners (it just ignores a late result).
+// Each list is saved in the browser and reused until the scraper runs again: the scraper
+// stamps newsMeta/lastRun when it finishes, and the page reads only that one doc to check.
+// If the stamp can't be read, a saved copy is trusted for up to 6 hours instead.
+const FALLBACK_TTL = 6 * 60 * 60 * 1000;
+let lastRunPromise = null;
+let lastRunFetchedAt = 0;
+// When the scraper last finished (ms), or null if unknown. Shared by all the lists on the
+// page and re-checked at most once a minute, so a News visit costs one read for this.
+function getLastScrape() {
+  if (!lastRunPromise || Date.now() - lastRunFetchedAt > 60 * 1000) {
+    lastRunFetchedAt = Date.now();
+    lastRunPromise = getDoc(doc(db, 'newsMeta', 'lastRun'))
+      .then((snap) => (snap.exists() ? snap.data().at?.toMillis?.() ?? null : null))
+      .catch(() => null);
+  }
+  return lastRunPromise;
+}
+// Loads a list from the saved copy or Firestore. A saved copy shows right away; if the
+// scraper has run since it was saved, fresh data loads and replaces it. Returns an
+// "unsubscribe" so callers can keep using these like listeners (it ignores late results).
 function loadCached(key, fetchList, callback, onError, label) {
   let active = true;
-  const cached = readCache(key, NEWS_TTL);
-  if (cached) {
-    callback(cached);
-    return () => {};
-  }
-  fetchList()
-    .then((items) => {
-      writeCache(key, items);
-      if (active) callback(items);
+  const cached = readCacheEntry(key);
+  if (cached) callback(cached.v);
+  getLastScrape()
+    .then((lastRun) => {
+      const fresh = cached && (lastRun ? cached.t >= lastRun : Date.now() - cached.t < FALLBACK_TTL);
+      if (fresh) return;
+      return fetchList().then((items) => {
+        writeCache(key, items);
+        if (active) callback(items);
+      });
     })
     .catch((err) => {
       console.error(`[news] ${label} failed:`, err);
-      if (active && onError) onError(err);
+      if (active && onError && !cached) onError(err);
     });
   return () => {
     active = false;

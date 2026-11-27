@@ -393,5 +393,10 @@ match /campusDigest/{id} {
 allow read: if isSignedIn();
 allow write: if false;
 }
+// When the news scraper last ran; the News page checks it to know if its saved copy is old.
+match /newsMeta/{id} {
+allow read: if isSignedIn();
+allow write: if false;
+}
 }
 }
