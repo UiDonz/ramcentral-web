@@ -56,8 +56,9 @@ onError,
 export function listenToAcademicCalendar(callback, onError) {
 const q = query(collection(db, 'academicCalendar'), orderBy('date', 'asc'));
 return loadCached(
-'academic-calendar',
-async () => (await getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() })),
+'academic-calendar-v2',
+// Entries with no category are leftovers from the first scraper and can be on the wrong day.
+async () => (await getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() })).filter((e) => e.category),
 callback,
 onError,
 'listenToAcademicCalendar'
