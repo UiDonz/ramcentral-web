@@ -65,8 +65,22 @@ if (!m) continue;
 const dateKey = `${Number(m[1])}-${Number(m[2])}-${Number(m[3])}`;
 const title = (ev.title || '').trim();
 if (!title) continue;
+// Multi-day events (e.g. Thanksgiving Break) have an end; an end at midnight means the day before is the last day.
+let endDate = null;
+const e = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(ev.end || '');
+if (e) {
+const last = new Date(Date.UTC(Number(e[1]), Number(e[2]) - 1, Number(e[3])));
+const endsAtMidnight = e[4] === '00' && e[5] === '00';
+if (endsAtMidnight) last.setUTCDate(last.getUTCDate() - 1);
+// A late-night event that ends after midnight (8 PM - 2 AM) is still a one-day event.
+const hours = (Date.parse(ev.end) - Date.parse(ev.start)) / 3600000;
+if (!endsAtMidnight && !(hours >= 24)) last.setTime(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+const lastKey = `${last.getUTCFullYear()}-${last.getUTCMonth() + 1}-${last.getUTCDate()}`;
+if (lastKey !== dateKey && last.getTime() > Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))) endDate = lastKey;
+}
 events.push({
 date: dateKey,
+endDate,
 title,
 description: (ev.description || ev.extendedProps?.display?.location || '').trim(),
 url: ev.url || null,
@@ -74,7 +88,12 @@ category: calendarCategory(ev.extendedProps?.source),
 time: ev.extendedProps?.display?.time || '',
 });
 }
-return events;
+return { events, start, end };
+}
+// 'YYYY-M-D' -> ms, for comparing stored calendar dates.
+function keyToMs(key) {
+const [y, mo, d] = String(key).split('-').map(Number);
+return new Date(y, mo - 1, d).getTime();
 }
 // maxTokens: 200 is plenty for one story's summary; the daily digest lists many
 // things, so it gets more room (200 cut it off mid-sentence, e.g. "There's an").
@@ -93,8 +112,9 @@ if (lastEnd > 0) text = text.slice(0, lastEnd + 1);
 return text;
 }
 async function run() {
-const [newsItems, calendarEvents] = await Promise.all([fetchNewsRoom(),
+const [newsItems, calendarFeed] = await Promise.all([fetchNewsRoom(),
 fetchCampusCalendarEvents()]);
+const calendarEvents = calendarFeed.events;
 // News items -> schoolNews, each with its own AI summary.
 for (const item of newsItems) {
 const category = categorize(item.title);
@@ -114,10 +134,13 @@ scrapedAt: Timestamp.now(),
 }
 // Calendar events -> academicCalendar (name kept from when it only held registrar deadlines).
 // The doc id hashes day + title, so re-runs overwrite instead of duplicating.
+const writtenIds = new Set();
 for (const ev of calendarEvents) {
 const docId = Buffer.from(`${ev.date}::${ev.title}`).toString('base64url').slice(0, 300);
+writtenIds.add(docId);
 await db.collection('academicCalendar').doc(docId).set({
 date: ev.date,
+endDate: ev.endDate,
 title: ev.title,
 description: ev.description,
 url: ev.url,
@@ -125,6 +148,24 @@ category: ev.category,
 time: ev.time,
 });
 }
+// Remove entries the school moved or deleted (anything in this run's date window that wasn't
+// in the feed), plus old entries from the first version of the scraper, which had no category
+// and sometimes the wrong day (e.g. Thanksgiving Break showing on Nov 23).
+const windowStart = new Date(calendarFeed.start).setHours(0, 0, 0, 0);
+const windowEnd = calendarFeed.end.getTime();
+// If the feed came back empty (site down or changed), skip the cleanup so nothing real gets deleted.
+const existing = calendarEvents.length > 0 ? await db.collection('academicCalendar').get() : { docs: [] };
+let removed = 0;
+for (const d of existing.docs) {
+const data = d.data();
+const ms = keyToMs(data.date);
+const stale = !writtenIds.has(d.id) && ms >= windowStart && ms <= windowEnd;
+if (!data.category || stale) {
+await d.ref.delete();
+removed++;
+}
+}
+console.log(`Removed ${removed} old or moved calendar entries.`);
 // One combined "today" digest per run, built only from today's events.
 const today = new Date();
 const todayKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;

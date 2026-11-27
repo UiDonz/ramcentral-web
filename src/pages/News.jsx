@@ -111,6 +111,34 @@ function shorten(text, max = 140) {
   return text.slice(0, max).replace(/\s+\S*$/, '') + '…';
 }
 
+// 'YYYY-M-D' <-> Date helpers for multi-day events.
+function keyToDate(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function dateToKey(dt) {
+  return `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`;
+}
+// A multi-day event (one with endDate) gets a copy on each day it covers, so clicking any of
+// those days shows it, and its detail line shows the full range (e.g. "Nov 25 - Nov 27").
+function expandMultiDay(events) {
+  const out = [];
+  for (const ev of events) {
+    if (!ev.date || !ev.endDate) {
+      out.push(ev);
+      continue;
+    }
+    const start = keyToDate(ev.date);
+    const end = keyToDate(ev.endDate);
+    const fmt = (dt) => dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const range = `${fmt(start)} - ${fmt(end)}`;
+    for (let dt = new Date(start), i = 0; dt <= end && i < 31; dt.setDate(dt.getDate() + 1), i++) {
+      out.push({ ...ev, date: dateToKey(dt), time: [range, ev.time].filter(Boolean).join(', ') });
+    }
+  }
+  return out;
+}
+
 // Turns a calendar event (date is 'YYYY-M-D') into the same shape the feed cards use.
 function buildCalendarFeedItem(ev) {
   const [y, m, d] = ev.date.split('-').map(Number);
@@ -476,6 +504,7 @@ export default function News() {
 
   // Upcoming events: 7 days including today, soonest first. Anything
   // before today or later than that is hidden.
+  const calendarDays = expandMultiDay(calendarEvents);
   const todayStart = new Date().setHours(0, 0, 0, 0);
   const windowEndDate = new Date(todayStart);
   windowEndDate.setDate(windowEndDate.getDate() + 6);
@@ -523,7 +552,7 @@ export default function News() {
         <div className="news-top-row">
           <div className="news-calendar-col">
             <div className="section-label">Calendar</div>
-            <Calendar events={calendarEvents} onDayClick={handleDayClick} />
+            <Calendar events={calendarDays} onDayClick={handleDayClick} />
 
             {/* Directly under the calendar so a clicked date's detail shows right where you clicked. */}
             {dayPanel && (
